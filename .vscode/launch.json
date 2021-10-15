@@ -19,7 +19,7 @@
                     "kind": "bin"
                 }
             },
-            "args": [],
+            "args": ["-ak", "test", "what", "the fuck"],
             "cwd": "${workspaceFolder}"
         },
         {

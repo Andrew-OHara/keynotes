@@ -1,8 +1,8 @@
 use std::{env, process, collections::HashMap};
 use keynotes::*;
 
-const NO_OPTIONS : i32 = -1;
-const NO_HOME : i32 = -1;
+const NO_OPTIONS : i32 = -0x1;
+const NO_HOME : i32 = -0x2;
 
 fn main() {
     let args: Vec<String> = env::args().collect();
@@ -35,7 +35,7 @@ fn main() {
     // create file struct
     let mut file = KeynoteFile {
         sections : HashMap::new(),
-        path_buf : data_filepath
+        filepath : data_filepath
     };   
 
     // handle various run modes as delineated by option
@@ -53,19 +53,48 @@ fn main() {
         },
 
         "-rs"   => {},
-        "-ls"   => {},
-        "-ak"   => {},
+        "-ls"   => {
+            file.list_sections();
+        },
+        "-ak"   => {
+            if args.len() < 5 {
+                println!("add key usage:    kn -ak [sectionToAddTo] [key] [value]");
+            }
+
+            let section_to_add_to = args.get(2);
+            let key = args.get(3);
+            let value = args.get(4);
+
+            if let (Some(s), Some(k), Some(v)) = (section_to_add_to, key, value) {
+                // TODO: CURRENT - prevent duplicate keys
+                file.add_key(s, k, v);
+            }
+            else {
+                println!("parameters not valid. no key added.");
+            };
+            
+        },
         "-rk"   => {},
         "-lk"   => {},
         "-fd"   => {},
 
         // TODO: put the help string into a file that gets loaded
-        "h" => {
+        _ => {
             print!(" keynotes v0.1.0:\n\n\tlegend:\t\t[] - mandatory    () - optional\n\n\tusage:\t kn [-action] [action params]\
             (additional params)\n\n\tactions:\n\n\t\t -as [sectionName]   Add Section: adds a section to the file with sectionName \
             action param as the name. Disallows duplicate section names. \n\t\t\t\t\t\t  Section names must be alphabetical\n");
-        }
-
-        _ => {}
+        }        
     }
- } 
+ }
+ 
+ #[cfg(test)]
+ mod tests {
+     mod main_tests {
+        use super::super::*;
+
+        #[test]
+        fn main_test() {
+            assert_eq!(NO_OPTIONS, -0x1);
+        }
+    }
+}
