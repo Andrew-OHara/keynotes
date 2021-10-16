@@ -127,7 +127,7 @@ impl KeynoteFile {
             let tmp_filepath = self.filepath.with_file_name("_kntemp.dat");
             let tmp_file = KeynoteFile::open_keynote_file(&tmp_filepath);
             if let None = tmp_file {
-                eprintln!("failed to create temporary file. no key added");
+                eprintln!("error: failed to create temporary file. no key added");
                 return;
             }
             
@@ -138,7 +138,7 @@ impl KeynoteFile {
                 let line = ensure_newline(&line);             
 
                 if let Err(_) = tmp_file.write_all(line.as_bytes()) {
-                    println!("error: failed to write to temporary file. no key added");
+                    eprintln!("error: failed to write to temporary file. no key added");
                     // TODO: delete the temporary file here?
                     return;
                 }
@@ -149,7 +149,7 @@ impl KeynoteFile {
                         let entry = KeynoteFile::build_entry_string(key, value);
 
                         if let Err(_) = tmp_file.write_all(entry.as_bytes()) {
-                            println!("error: failed to write to temporary file. no key added");
+                            eprintln!("error: failed to write to temporary file. no key added");
                             // TODO: delete the temporary file here?
                             return;
                         }
@@ -160,24 +160,74 @@ impl KeynoteFile {
             // now we need to delete the old file and rename the temp one
 
             if let Err(_) = std::fs::remove_file(self.filepath.clone()) {
-                println!("error: could not delete original file");
+                eprintln!("error: could not delete original file");
                 return;
             }
 
             if let Err(_) =std::fs::rename(tmp_filepath, self.filepath.clone()) {
                 // TODO: delete the temporary file here?
-                println!("error: could not rename temp file file");
+                eprintln!("error: could not rename temp file file");
                 return;  
             }
 
         } else {
-            println!("unable to open file, no key written");
+            eprintln!("error: unable to open file, no key written");
             return;
         }
     }
 
     pub fn remove_section(&mut self, section_to_remove: &str) {
-        println!("remove_section not implemented yet! {}", section_to_remove);
+        // * write the new key to the file
+        // ** open file and read all lines
+        if let Some(file) = KeynoteFile::open_keynote_file(&self.filepath) {
+            let reader = io::BufReader::new(file);
+            
+            let tmp_filepath = self.filepath.with_file_name("_kntemp.dat");
+            let tmp_file = KeynoteFile::open_keynote_file(&tmp_filepath);
+            if let None = tmp_file {
+                eprintln!("failed to create temporary file. no key added");
+                return;
+            }
+            
+            let mut tmp_file = tmp_file.unwrap();
+
+            let mut writing = true;
+
+            for line in reader.lines() {
+                let line = line.unwrap();                
+                let line = ensure_newline(&line);
+
+                let section_name = KeynoteFile::get_section_name_from_section_header(&line);
+                if let Some(section_name) = section_name {
+                    if section_name == section_to_remove {
+                        writing = false;    // found the section to remove, stop copying
+                    }
+                }
+
+                if writing || (!writing &&  KeynoteFile::get_section_name_from_section_header(&line).is_some()){
+                    // !writing means we just found a new section after skipping the last, start writing again
+                    if !writing { writing = true; } 
+                    if let Err(_) = tmp_file.write_all(line.as_bytes()) {
+                        eprintln!("error: failed to write to temporary file. no key added");
+                        // TODO: delete the temporary file here?
+                        return;
+                    }
+                }
+            }
+
+            // now we need to delete the old file and rename the temp one
+
+            if let Err(_) = std::fs::remove_file(self.filepath.clone()) {
+                eprintln!("error: could not delete original file");
+                return;
+            }
+
+            if let Err(_) =std::fs::rename(tmp_filepath, self.filepath.clone()) {
+                // TODO: delete the temporary file here?
+                eprintln!("error: could not rename temp file file");
+                return;  
+            }
+        }
     }
     
     pub fn list_sections(mut self) {
@@ -219,7 +269,9 @@ impl KeynoteFile {
         if let Err(_) = file.write(section_header_str.as_bytes()) {
             println!("error: unable to write to keynotes data file");
             return
-        }       
+        }
+        
+        println!("{} added", section_name);
     }        
 }
 
