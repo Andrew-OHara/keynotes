@@ -11,14 +11,14 @@ fn ensure_newline(line: &str) -> String {
 }
 
 pub struct Section {
-    _name : String,
+    name : String,
     data : HashMap<String, String>
 }
 
 impl Section {
-    fn new(_name : String) -> Section {
+    fn new(name : String) -> Section {
         Section {
-            _name,
+            name,
             data : HashMap::new()
         }
     }
@@ -74,6 +74,17 @@ impl KeynoteFile {
         entry
     } 
 
+    fn get_entry_from_string(line: &str) -> Option<(&str, &str)>{
+        if line.starts_with("\t") {
+            if let Some(i) = line.find(">") {
+                let k = &line[2..i];
+                let v = &line[i+1..line.len()-3];
+                return Some((k, v));
+            }
+        }
+        None
+    }
+
     fn get_section_name_from_section_header(line : &str) -> Option<&str> {
         if !line.contains("<") || !line.contains(">") || line.contains("\t") {  // not a valid section name
             return None
@@ -97,11 +108,23 @@ impl KeynoteFile {
 
         // read lines one at a time, checking for sections and reading them into the data structure
         let reader = io::BufReader::new(file);         
+        let mut curr_section_name = String::new();
         for line in reader.lines() {
             if let Ok(lstr) = line {
-                if let Some(name) = KeynoteFile::get_section_name_from_section_header(&lstr) {
-                    let st_name = String::from(name);
-                    self.sections.insert(st_name.clone(), Section::new(st_name));
+                if let Some(section_name) = KeynoteFile::get_section_name_from_section_header(&lstr) {
+                    let st_name = String::from(section_name);
+                    self.sections.insert(st_name.clone(), Section::new(st_name.clone()));
+                    curr_section_name = st_name;
+                }
+                else if let Some((k, v)) = KeynoteFile::get_entry_from_string(&lstr) {
+                    let section = self.sections.get_mut(&curr_section_name);
+                    match section {
+                        Some(section) => section.data.insert(k.to_string(), v.to_string()), 
+                        None => { 
+                            println!("error: file format corrupted");
+                            return 
+                        }
+                    };
                 }
             }            
         }
@@ -173,6 +196,19 @@ impl KeynoteFile {
         } else {
             eprintln!("error: unable to open file, no key written");
             return;
+        }
+    }
+
+    pub fn list_keys(mut self) {
+        self.load_data();
+        for (_, section) in self.sections {   
+            if section.data.len() != 0 {
+                println!("{}", section.name)
+            }    
+
+            for (k, _) in section.data {
+                println!("\t{}", k);
+            }
         }
     }
 

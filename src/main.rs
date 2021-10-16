@@ -68,6 +68,7 @@ fn main() {
 
             if args.len() < 5 {
                 println!("add key usage:    kn -ak [sectionToAddTo] [key] [value]");
+                return;
             }
 
             let section_to_add_to = args.get(2);
@@ -85,7 +86,9 @@ fn main() {
             
         },
         "-rk"   => {},
-        "-lk"   => {},
+        "-lk"   => {
+            file.list_keys();
+        },
         "-fd"   => {},
 
         // TODO: put the help string into a file that gets loaded
