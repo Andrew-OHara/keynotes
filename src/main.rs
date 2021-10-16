@@ -68,7 +68,7 @@ fn main() {
         "-ak"   => {
 
             if args.len() < 5 {
-                println!("add key usage:    kn -ak [sectionToAddTo] [key] [value]");
+                println!("add key usage:    kn -ak [sectionToAddTo] [key] [value]       all options mandatory.  see kn -help for details");
                 return;
             }
 
@@ -96,7 +96,20 @@ fn main() {
         "-lk"   => {
             file.list_keys();
         },
-        "-fd"   => {},
+        "-ld"   => {
+            if args.len() < 3 {                
+                println!("list data usage:    kn -ld [key]      key is mandatory.  see kn -help for details");
+                return
+            }
+            if let Some(key) = args.get(2) {
+                if let Some(entry) = file.get_value_from_key(key) {
+                    println!("{}:   {}", key, entry);
+                }
+                else {
+                    println!("key {} does not exist", key);
+                };
+            };            
+        },
 
         // TODO: put the help string into a file that gets loaded
         _ => {

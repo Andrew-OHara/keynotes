@@ -310,6 +310,16 @@ impl KeynoteFile {
         
         println!("{} added", section_name);
     }  
+
+    pub fn get_value_from_key(&mut self, key: &str) -> Option<&str>{
+        self.load_data();    
+        for (_, section) in &self.sections {
+            if let Some(value) = section.data.get(key) {
+                return Some(value)
+            }
+        } 
+        None
+    }
     
     pub fn contains_key(&mut self, key: &str) -> bool {    
         self.load_data();    
