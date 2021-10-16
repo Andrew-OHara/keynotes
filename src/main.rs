@@ -45,12 +45,20 @@ fn main() {
                 file.add_section(section_name);
             }      
             else {
-                println!("add section usage:    kn -as [sectionName]     sectionName is mandatory.  see kn -help for details")
+                println!("add section usage:    kn -as [sectionName]     sectionName is mandatory.  see kn -help for details");
             }
             
         },
 
-        "-rs"   => {},
+        "-rs"   => {
+            if let Some(section_to_remove) = args.get(2) {
+                file.remove_section(section_to_remove);
+            }
+            else {
+                println!("remove section usage:    kn -rs [sectionName]     sectionName is mandatory.  see kn -help for details");
+            };
+            
+        },
         "-ls"   => {
 
             file.list_sections();

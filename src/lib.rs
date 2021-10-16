@@ -175,6 +175,10 @@ impl KeynoteFile {
             return;
         }
     }
+
+    pub fn remove_section(&mut self, section_to_remove: &str) {
+        println!("remove_section not implemented yet! {}", section_to_remove);
+    }
     
     pub fn list_sections(mut self) {
         self.load_data();
