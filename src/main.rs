@@ -8,7 +8,7 @@ fn main() {
     let args: Vec<String> = env::args().collect();
 
     // fail if no arguments passed, otherwise get option param 
-    let option = args.get(1);
+    let option = args.get(1);    
     let option = if let None = option {
 
         println!("kn usage :    kn -[option]      option is mandatory.  kn -help for valid options");
@@ -19,8 +19,6 @@ fn main() {
         option.unwrap()
     
     };
-
-    println!("{}", option);
 
     // build path to keynotes.dat file        
     let mut data_filepath = match home::home_dir() {
@@ -41,7 +39,7 @@ fn main() {
     // handle various run modes as delineated by option
     match option.as_str() {
         "-as"   => {                                    // add section
-
+            
             let section_name_opt = args.get(2);
             if let Some(section_name) = section_name_opt {
                 file.add_section(section_name);
@@ -54,9 +52,12 @@ fn main() {
 
         "-rs"   => {},
         "-ls"   => {
+
             file.list_sections();
+        
         },
         "-ak"   => {
+
             if args.len() < 5 {
                 println!("add key usage:    kn -ak [sectionToAddTo] [key] [value]");
             }
@@ -84,7 +85,7 @@ fn main() {
             (additional params)\n\n\tactions:\n\n\t\t -as [sectionName]   Add Section: adds a section to the file with sectionName \
             action param as the name. Disallows duplicate section names. \n\t\t\t\t\t\t  Section names must be alphabetical\n");
         }        
-    }
+    };    
  }
  
  #[cfg(test)]

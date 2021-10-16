@@ -115,7 +115,7 @@ impl KeynoteFile {
             section.data.insert(String::from(key), String::from(value));
         }
         else {
-            println!("cannot add to {}. that section doesn not exist", section_to_add_to);
+            println!("cannot add to {}. that section does not exist", section_to_add_to);
             return;
         }
 
