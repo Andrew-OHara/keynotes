@@ -52,7 +52,8 @@ fn main() {
 
         "-rs"   => {
             if let Some(section_to_remove) = args.get(2) {
-                file.remove_section(section_to_remove);
+                eprintln!("removing {}", section_to_remove);
+                file.remove_section(section_to_remove);                
             }
             else {
                 println!("remove section usage:    kn -rs [sectionName]     sectionName is mandatory.  see kn -help for details");
@@ -77,8 +78,14 @@ fn main() {
 
             if let (Some(s), Some(k), Some(v)) = (section_to_add_to, key, value) {
                 // TODO: CURRENT - prevent duplicate keys
-                file.add_key(s, k, v);
-                println!("added <{}>  {}  to  {}", k, v, s);
+                if !file.contains_key(k) {
+                    println!("adding <{}>  {}  to  {}", k, v, s);
+                    file.add_key(s, k, v);                    
+                }
+                else {
+                    println!("key: {} already exists. no key added", k);
+                }
+                
             }
             else {
                 println!("parameters not valid. no key added.");

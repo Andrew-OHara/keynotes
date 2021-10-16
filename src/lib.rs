@@ -309,7 +309,17 @@ impl KeynoteFile {
         }
         
         println!("{} added", section_name);
-    }        
+    }  
+    
+    pub fn contains_key(&mut self, key: &str) -> bool {    
+        self.load_data();    
+        for (_, section) in &self.sections {
+            if section.data.contains_key(key) {
+                return true;
+            }
+        }
+        return false
+    }
 }
 
 pub fn is_alphabetic(s : &str) -> bool {
