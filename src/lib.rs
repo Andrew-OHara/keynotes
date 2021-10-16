@@ -138,7 +138,7 @@ impl KeynoteFile {
             section.data.insert(String::from(key), String::from(value));
         }
         else {
-            println!("cannot add to {}. that section does not exist", section_to_add_to);
+            println!("cannot add to '{}'. that section does not exist", section_to_add_to);
             return;
         }
 
@@ -212,6 +212,81 @@ impl KeynoteFile {
         }
     }
 
+    pub fn remove_key(&mut self, key: &str) {
+        if !self.contains_key(key) {
+            println!("key: '{}' does not exist. nothing removed", key);
+            return;
+        }
+
+        self.load_data();
+
+        // * write the new key to the file
+        // ** open file and read all lines
+        if let Some(file) = KeynoteFile::open_keynote_file(&self.filepath) {
+            let reader = io::BufReader::new(file);
+            
+            let tmp_filepath = self.filepath.with_file_name("_kntemp.dat");
+            let tmp_file = KeynoteFile::open_keynote_file(&tmp_filepath);
+            if let None = tmp_file {
+                eprintln!("failed to create temporary file. no key added");
+                return;
+            }
+            
+            let mut tmp_file = tmp_file.unwrap();
+            let mut curr_section_name = String::new();
+            
+            for line in reader.lines() {
+                let line = line.unwrap();                
+                let line = ensure_newline(&line);
+
+                if let Some((k, _)) = KeynoteFile::get_entry_from_string(&line) {
+                    // line is an entry, only write if it's not the key we're removing
+                    if k != key {
+                        if let Err(_) = tmp_file.write_all(line.as_bytes()) {
+                            eprintln!("error: failed to write to temporary file. no key added");
+                            // TODO: delete the temporary file here?
+                            return;
+                        } 
+                    } 
+                    else {
+                        // remove from data structure
+                        if let Some(section) = self.get_section(&curr_section_name) {
+                            section.data.remove(key);                            
+                        }
+                    }
+                } else {    // line is a section, write for sure
+                    let curr_section_opt = KeynoteFile::get_section_name_from_section_header(&line);
+                    match curr_section_opt {
+                        Some(v) => curr_section_name = v.to_string(),
+                        None => {                            
+                            eprintln!("error: file corrupted");
+                            return;
+                        }
+                    };
+
+                    if let Err(_) = tmp_file.write_all(line.as_bytes()) {
+                        eprintln!("error: failed to write to temporary file. no key added");
+                        // TODO: delete the temporary file here?
+                        return;
+                    }
+                };                                
+            }
+            
+            // now we need to delete the old file and rename the temp one
+            if let Err(_) = std::fs::remove_file(self.filepath.clone()) {
+                eprintln!("error: could not delete original file");
+                return;
+            }
+
+            if let Err(_) = std::fs::rename(tmp_filepath, self.filepath.clone()) {
+                // TODO: delete the temporary file here?
+                eprintln!("error: could not rename temp file file");
+                return;  
+            }
+
+        }
+    }
+
     pub fn remove_section(&mut self, section_to_remove: &str) {
         // * write the new key to the file
         // ** open file and read all lines
@@ -280,14 +355,14 @@ impl KeynoteFile {
 
     pub fn add_section(&mut self, section_name : &str) {       
         if !is_alphabetic(section_name) {
-            println!("{} is not a valid section name", section_name);
+            println!("'{}' is not a valid section name", section_name);
             return
         }        
 
         // refresh the data structure
         self.load_data();
         if let Some(_) = self.get_section(section_name) {
-            println!("section named {} already exists", section_name);
+            println!("section named '{}' already exists", section_name);
             return
         }
         // Add Section object to data structure
@@ -308,7 +383,7 @@ impl KeynoteFile {
             return
         }
         
-        println!("{} added", section_name);
+        println!("'{}' added", section_name);
     }  
 
     pub fn get_value_from_key(&mut self, key: &str) -> Option<&str>{

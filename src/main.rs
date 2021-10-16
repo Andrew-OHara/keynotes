@@ -38,7 +38,7 @@ fn main() {
 
     // handle various run modes as delineated by option
     match option.as_str() {
-        "-as"   => {                                    // add section
+        "-as" => {                                    // add section
             
             let section_name_opt = args.get(2);
             if let Some(section_name) = section_name_opt {
@@ -50,7 +50,7 @@ fn main() {
             
         },
 
-        "-rs"   => {
+        "-rs" => {
             if let Some(section_to_remove) = args.get(2) {
                 eprintln!("removing {}", section_to_remove);
                 file.remove_section(section_to_remove);                
@@ -60,14 +60,14 @@ fn main() {
             };
             
         },
-        "-ls"   => {
+        "-ls" => {
 
             file.list_sections();
         
         },
-        "-ak"   => {
+        "-ak" => {
 
-            if args.len() < 5 {
+            if args.len() != 5 {
                 println!("add key usage:    kn -ak [sectionToAddTo] [key] [value]       all options mandatory.  see kn -help for details");
                 return;
             }
@@ -92,12 +92,21 @@ fn main() {
             };
             
         },
-        "-rk"   => {},
-        "-lk"   => {
+        "-rk" => {
+            if args.len() != 3 {                
+                println!("list data usage:    kn -rk [key]      key is mandatory.  see kn -help for details");
+                return
+            }
+            if let Some(key) = args.get(2) {
+                println!("removing key: {}", key);
+                file.remove_key(key);                
+            }; 
+        },
+        "-lk" => {
             file.list_keys();
         },
-        "-ld"   => {
-            if args.len() < 3 {                
+        "-ld" => {
+            if args.len() != 3 {                
                 println!("list data usage:    kn -ld [key]      key is mandatory.  see kn -help for details");
                 return
             }
