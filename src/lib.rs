@@ -206,7 +206,7 @@ impl KeynoteFile {
                 }
 
                 if writing || (!writing &&  KeynoteFile::get_section_name_from_section_header(&line).is_some()){
-                    // !writing means we just found a new section after skipping the last, start writing again
+                    // !writing in here means we just found a new section after skipping the last, start writing again
                     if !writing { writing = true; } 
                     if let Err(_) = tmp_file.write_all(line.as_bytes()) {
                         eprintln!("error: failed to write to temporary file. no key added");
@@ -275,7 +275,6 @@ impl KeynoteFile {
         println!("{} added", section_name);
     }        
 }
-
 
 pub fn is_alphabetic(s : &str) -> bool {
     for c in s.chars() {
