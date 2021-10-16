@@ -22,6 +22,27 @@ impl Section {
             data : HashMap::new()
         }
     }
+
+    fn build_section_string(section_name: &str) -> String {
+        let mut header_string = String::new();
+        header_string.push('<');
+        header_string.push_str(section_name);
+        header_string.push_str(">\n");
+
+        header_string
+    } 
+    
+    fn get_section_name_from_string(line : &str) -> Option<&str> {
+        if !line.contains("<") || !line.contains(">") || line.contains("\t") {  // not a valid section name
+            return None
+        }
+
+        Some(&line[1..line.len()-1])
+    } 
+
+    fn add_entry(&mut self, key: &str, value: &str) {
+        self.data.insert(key.to_string(), value.to_string());
+    }
 }
 
 pub struct KeynoteFile {
@@ -54,15 +75,6 @@ impl KeynoteFile {
         Some(file)
     }
 
-    fn build_section_string(section_name: &str) -> String {
-        let mut header_string = String::new();
-        header_string.push('<');
-        header_string.push_str(section_name);
-        header_string.push_str(">\n");
-
-        header_string
-    } 
-
     fn build_entry_string(key: &str, value: &str) -> String {
         let mut entry: String = String::from("\t<");
         entry.push_str(key);
@@ -83,15 +95,7 @@ impl KeynoteFile {
             }
         }
         None
-    }
-
-    fn get_section_name_from_section_header(line : &str) -> Option<&str> {
-        if !line.contains("<") || !line.contains(">") || line.contains("\t") {  // not a valid section name
-            return None
-        }
-
-        Some(&line[1..line.len()-1])
-    }    
+    }       
 
     fn get_section(&mut self, section_name : &str) -> Option<&mut Section> {
         match self.sections.get_mut(section_name) {
@@ -111,17 +115,17 @@ impl KeynoteFile {
         let mut curr_section_name = String::new();
         for line in reader.lines() {
             if let Ok(lstr) = line {
-                if let Some(section_name) = KeynoteFile::get_section_name_from_section_header(&lstr) {
+                if let Some(section_name) = Section::get_section_name_from_string(&lstr) {
                     let st_name = String::from(section_name);
                     self.sections.insert(st_name.clone(), Section::new(st_name.clone()));
                     curr_section_name = st_name;
                 }
                 else if let Some((k, v)) = KeynoteFile::get_entry_from_string(&lstr) {
-                    let section = self.sections.get_mut(&curr_section_name);
+                    let section = self.get_section(&curr_section_name);
                     match section {
-                        Some(section) => section.data.insert(k.to_string(), v.to_string()), 
+                        Some(section) => section.add_entry(k, v), 
                         None => { 
-                            println!("error: file format corrupted");
+                            eprintln!("error: file format corrupted");
                             return 
                         }
                     };
@@ -135,7 +139,7 @@ impl KeynoteFile {
         
         // insert into data structure
         if let Some(section) = self.get_section(section_to_add_to){
-            section.data.insert(String::from(key), String::from(value));
+            section.add_entry(key, value);
         }
         else {
             println!("cannot add to '{}'. that section does not exist", section_to_add_to);
@@ -166,7 +170,7 @@ impl KeynoteFile {
                     return;
                 }
                
-                if let Some(section_name) = KeynoteFile::get_section_name_from_section_header(&line.trim_end()) {
+                if let Some(section_name) = Section::get_section_name_from_string(&line.trim_end()) {
                     if section_name == section_to_add_to {
                         // add new entry
                         let entry = KeynoteFile::build_entry_string(key, value);
@@ -181,7 +185,6 @@ impl KeynoteFile {
             }
 
             // now we need to delete the old file and rename the temp one
-
             if let Err(_) = std::fs::remove_file(self.filepath.clone()) {
                 eprintln!("error: could not delete original file");
                 return;
@@ -255,7 +258,7 @@ impl KeynoteFile {
                         }
                     }
                 } else {    // line is a section, write for sure
-                    let curr_section_opt = KeynoteFile::get_section_name_from_section_header(&line);
+                    let curr_section_opt = Section::get_section_name_from_string(&line);
                     match curr_section_opt {
                         Some(v) => curr_section_name = v.to_string(),
                         None => {                            
@@ -308,7 +311,7 @@ impl KeynoteFile {
                 let line = line.unwrap();                
                 let line = ensure_newline(&line);
 
-                let section_name = KeynoteFile::get_section_name_from_section_header(&line.trim_end());
+                let section_name = Section::get_section_name_from_string(&line.trim_end());
                 if let Some(section_name) = section_name {
                     if section_name == section_to_remove {
                         writing = false;    // found the section to remove, stop copying
@@ -316,7 +319,7 @@ impl KeynoteFile {
                     }
                 }
 
-                if writing || (!writing &&  KeynoteFile::get_section_name_from_section_header(&line).is_some()){
+                if writing || (!writing &&  Section::get_section_name_from_string(&line).is_some()){
                     // !writing in here means we just found a new section after skipping the last, start writing again
                     if !writing { writing = true; } 
                     if let Err(_) = tmp_file.write_all(line.as_bytes()) {
@@ -334,7 +337,7 @@ impl KeynoteFile {
                 return;
             }
 
-            if let Err(_) =std::fs::rename(tmp_filepath, self.filepath.clone()) {
+            if let Err(_) = std::fs::rename(tmp_filepath, self.filepath.clone()) {
                 // TODO: delete the temporary file here?
                 eprintln!("error: could not rename temp file file");
                 return;  
@@ -370,7 +373,7 @@ impl KeynoteFile {
 
         // Add string representation of Section to file
         // build section header string 
-        let section_header_str = KeynoteFile::build_section_string(section_name);        
+        let section_header_str = Section::build_section_string(section_name);        
         
         // open the file 
         let file_opt = KeynoteFile::open_keynote_file(&self.filepath);            
@@ -386,6 +389,7 @@ impl KeynoteFile {
         println!("'{}' added", section_name);
     }  
 
+    // TODO: good candidate for Result rather than option
     pub fn get_value_from_key(&mut self, key: &str) -> Option<&str>{
         self.load_data();    
         for (_, section) in &self.sections {
