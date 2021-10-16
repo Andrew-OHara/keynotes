@@ -197,10 +197,11 @@ impl KeynoteFile {
                 let line = line.unwrap();                
                 let line = ensure_newline(&line);
 
-                let section_name = KeynoteFile::get_section_name_from_section_header(&line);
+                let section_name = KeynoteFile::get_section_name_from_section_header(&line.trim_end());
                 if let Some(section_name) = section_name {
                     if section_name == section_to_remove {
                         writing = false;    // found the section to remove, stop copying
+                        continue;
                     }
                 }
 

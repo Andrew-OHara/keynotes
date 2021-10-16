@@ -77,6 +77,7 @@ fn main() {
             if let (Some(s), Some(k), Some(v)) = (section_to_add_to, key, value) {
                 // TODO: CURRENT - prevent duplicate keys
                 file.add_key(s, k, v);
+                println!("added <{}>  {}  to  {}", k, v, s);
             }
             else {
                 println!("parameters not valid. no key added.");

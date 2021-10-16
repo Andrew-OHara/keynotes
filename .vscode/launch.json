@@ -19,7 +19,7 @@
                     "kind": "bin"
                 }
             },
-            "args": ["-rs", "toremove"],
+            "args": ["-rs", "test"],
             "cwd": "${workspaceFolder}"
         },
         {
