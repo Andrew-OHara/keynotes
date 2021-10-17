@@ -119,8 +119,7 @@ impl KeynoteFile {
             return Ok(());
         }
 
-        // * write the new key to the file
-        // ** open file and read all lines
+        // write the new key to the file        
         let file = KeynoteFile::open_keynote_file(&self.filepath)?;
         let reader = io::BufReader::new(file);
             
@@ -167,8 +166,7 @@ impl KeynoteFile {
             return Err("key: '{}' does not exist. nothing removed".into());            
         }     
 
-        // * write the new key to the file
-        // ** open file and read all lines
+        // write the new key to the file        
         let file = KeynoteFile::open_keynote_file(&self.filepath)?;
         let reader = io::BufReader::new(file);
             
@@ -187,7 +185,7 @@ impl KeynoteFile {
                     tmp_file.write_all(line.as_bytes())?;                             
                 } 
                 else {
-                    // remove from data structure
+                    // it is the key we're removing... remove from data structure
                     if let Some(section) = self.get_section(&curr_section_name) {
                         section.data.remove(key);                            
                     }
@@ -196,7 +194,7 @@ impl KeynoteFile {
                 let curr_section_opt = Section::get_section_name_from_string(&line);
                 match curr_section_opt {
                     Some(v) => curr_section_name = v.to_string(),
-                    None => {                            
+                    None => {                           
                         return Err("error: file corrupted".into());                            
                     }
                 };
