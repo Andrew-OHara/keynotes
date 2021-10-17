@@ -1,41 +1,21 @@
-use std::{env, process, collections::HashMap};
+use std::env;
 
 use keynotes::KeynoteFile;
 
-const NO_OPTIONS : i32 = -0x1;
-const NO_HOME : i32 = -0x2;
-
-fn main() {
+fn main() -> Result<(), &'static str> {
     let args: Vec<String> = env::args().collect();
 
     // fail if no arguments passed, otherwise get option param 
     let option = args.get(1);    
     let option = if let None = option {
-
         println!("kn usage :    kn -[option]      option is mandatory.  kn -help for valid options");
-        process::exit(NO_OPTIONS);
-    
-    } else {
-       
-        option.unwrap()
-    
+        return Ok(())         
+    } else {       
+        option.unwrap()    
     };
-
-    // build path to keynotes.dat file        
-    let mut data_filepath = match home::home_dir() {
-        Some(path_buffer) => path_buffer,
-        None => {
-            println!("error: could not find the home folder");
-            process::exit(NO_HOME); 
-        }
-    };        
-    data_filepath.push(".keynotes/keynotes.dat");
-
+    
     // create file struct
-    let mut file = KeynoteFile {
-        sections : HashMap::new(),
-        filepath : data_filepath
-    };   
+    let mut file = KeynoteFile::new()?;    
 
     // handle various run modes as delineated by option
     match option.as_str() {
@@ -47,13 +27,12 @@ fn main() {
             }      
             else {
                 println!("add section usage:    kn -as [sectionName]     sectionName is mandatory.  see kn -help for details");
-            }
-            
+            }            
         },
 
         "-rs" => {
             if let Some(section_to_remove) = args.get(2) {
-                eprintln!("removing {}", section_to_remove);
+                println!("removing {}", section_to_remove);
                 file.remove_section(section_to_remove);                
             }
             else {
@@ -69,8 +48,8 @@ fn main() {
         "-ak" => {
 
             if args.len() != 5 {
-                println!("add key usage:    kn -ak [sectionToAddTo] [key] [value]       all options mandatory.  see kn -help for details");
-                return;
+                println!("add key usage:    kn -ak [sectionToAddTo] [key] [value]       all options mandatory.  see kn -help for details"); 
+                return Ok(())                  
             }
 
             let section_to_add_to = args.get(2);
@@ -78,25 +57,25 @@ fn main() {
             let value = args.get(4);
 
             if let (Some(s), Some(k), Some(v)) = (section_to_add_to, key, value) {
-                // TODO: CURRENT - prevent duplicate keys
                 if !file.contains_key(k) {
                     println!("adding <{}>  {}  to  {}", k, v, s);
                     file.add_key(s, k, v);                    
                 }
                 else {
                     println!("key: {} already exists. no key added", k);
+                    return Ok(())
                 }
                 
             }
             else {
-                println!("parameters not valid. no key added.");
+                return Err("parameters not valid. no key added.");
             };
             
         },
         "-rk" => {
             if args.len() != 3 {                
-                println!("list data usage:    kn -rk [key]      key is mandatory.  see kn -help for details");
-                return
+                return Err("list data usage:    kn -rk [key]      key is mandatory.  see kn -help for details");
+                
             }
             if let Some(key) = args.get(2) {
                 println!("removing key: {}", key);
@@ -108,8 +87,7 @@ fn main() {
         },
         "-ld" => {
             if args.len() != 3 {                
-                println!("list data usage:    kn -ld [key]      key is mandatory.  see kn -help for details");
-                return
+                return Err("list data usage:    kn -ld [key]      key is mandatory.  see kn -help for details");                
             }
             if let Some(key) = args.get(2) {
                 if let Some(entry) = file.get_value_from_key(key) {
@@ -127,5 +105,6 @@ fn main() {
             (additional params)\n\n\tactions:\n\n\t\t -as [sectionName]   Add Section: adds a section to the file with sectionName \
             action param as the name. Disallows duplicate section names. \n\t\t\t\t\t\t  Section names must be alphabetical\n");
         }        
-    };    
+    };
+    Ok(())   
  }

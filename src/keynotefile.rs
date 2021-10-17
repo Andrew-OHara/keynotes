@@ -1,4 +1,4 @@
-use std::{fs::OpenOptions, io, io::{Write, prelude::*}, collections::HashMap};
+use std::{fs::{OpenOptions, File}, io, io::{Write, prelude::*}, collections::HashMap, path::PathBuf};
 use section::*;
 use kn_utils::*;
 
@@ -6,12 +6,12 @@ mod kn_utils;
 mod section;
 
 pub struct KeynoteFile {
-    pub filepath : std::path::PathBuf,
-    pub sections : HashMap<String, Section>
+    pub filepath : PathBuf,
+    pub sections : HashMap<String, Section> 
 }
 
 impl KeynoteFile {
-    fn open_keynote_file(filepath : &std::path::PathBuf) -> Option<std::fs::File>{
+    fn open_keynote_file(filepath : &PathBuf) -> Option<File>{
         // obtain the path to the path_buf parent folder
         let mut folder = filepath.clone();
         folder.pop();        
@@ -93,6 +93,21 @@ impl KeynoteFile {
             }            
         }
     }         
+
+    pub fn new<'a>() -> Result<KeynoteFile, &'a str> {
+        // build path to keynotes.dat file        
+        let mut data_filepath = match home::home_dir() {
+        Some(path_buffer) => path_buffer,
+        None => {            
+            return Err("error: unable to find home directory") 
+        }
+    };        
+    data_filepath.push(".keynotes/keynotes.dat");
+        Ok(KeynoteFile {
+            sections: HashMap::new(),
+            filepath: data_filepath 
+        })
+    }
 
     pub fn add_key(mut self, section_to_add_to: &str, key: &str, value: &str) {
         self.load_data();
