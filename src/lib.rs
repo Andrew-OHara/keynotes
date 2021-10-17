@@ -58,7 +58,7 @@ impl KeynoteFile {
     }
     
     fn add_section_to_data_structure(&mut self, section_name: &str) {
-        self.sections.insert(section_name.to_string(), Section::new(section_name.to_string()));
+        self.sections.insert(section_name.to_string(), Section::new(section_name));
     }
 
     pub fn load_data(&mut self) -> Result<(), Box<dyn Error>> {
@@ -133,7 +133,7 @@ impl KeynoteFile {
 
             tmp_file.write_all(line.as_bytes())?;               
                
-            if let Some(section_name) = Section::get_section_name_from_string(&line.trim_end()) {
+            if let Some(section_name) = Section::get_section_name_from_string(&line) {
                 if section_name == section_to_add_to {
                     // add new entry to file
                     let entry = KeynoteFile::build_entry_string(key, value);
@@ -223,7 +223,7 @@ impl KeynoteFile {
             let line = line.unwrap();               
             let line = ensure_newline(&line);
 
-            let section_name = Section::get_section_name_from_string(&line.trim_end());
+            let section_name = Section::get_section_name_from_string(&line);
             if let Some(section_name) = section_name {
                 if section_name == section_to_remove {
                     writing = false;    // found the section to remove, stop copying
