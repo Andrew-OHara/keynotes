@@ -15,14 +15,15 @@ fn main() -> Result<(), Box<dyn Error>> {
     };
     
     // create file struct
-    let mut file = KeynoteFile::new()?;    
+    let mut file = KeynoteFile::new()?;   
+    file.load_data()?; 
 
     // handle various run modes as delineated by option
     match option.as_str() {
         "-as" => {                                    // add section
             
             let section_name_opt = args.get(2);
-            if let Some(section_name) = section_name_opt {
+            if let Some(section_name) = section_name_opt {                
                 file.add_section(section_name)?;
             }      
             else {
@@ -31,7 +32,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         },
 
         "-rs" => {
-            if let Some(section_to_remove) = args.get(2) {
+            if let Some(section_to_remove) = args.get(2) {                
                 println!("removing {}", section_to_remove);
                 file.remove_section(section_to_remove)?;                
             }
@@ -40,8 +41,7 @@ fn main() -> Result<(), Box<dyn Error>> {
             };
             
         },
-        "-ls" => {
-
+        "-ls" => {            
             file.list_sections();
         
         },
@@ -55,7 +55,7 @@ fn main() -> Result<(), Box<dyn Error>> {
             if let (Some(section_to_add_to), Some(key), Some(value)) = (args.get(2), args.get(3), args.get(4)) {
                 
                 println!("adding <{}>  {}  to  {}", key, value, section_to_add_to);
-                file.add_key(section_to_add_to, key, value)?
+                file.add_key(section_to_add_to, key, value)?;
                                
             }
             else {

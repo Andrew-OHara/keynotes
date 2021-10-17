@@ -56,34 +56,36 @@ impl KeynoteFile {
         }
     }
     
-    fn load_data(&mut self) {
+    fn add_section_to_data_structure(&mut self, section_name: &str) {
+        self.sections.insert(section_name.to_string(), Section::new(section_name.to_string()));
+    }
+
+    pub fn load_data(&mut self) -> Result<(), Box<dyn Error>> {
         // open the file 
-        let file_opt = KeynoteFile::open_keynote_file(&self.filepath);            
-        if let Err(_) = file_opt { return }
-        let file = file_opt.unwrap();
+        let file = KeynoteFile::open_keynote_file(&self.filepath)?;
 
         // read lines one at a time, checking for sections and reading them into the data structure
         let reader = io::BufReader::new(file);         
         let mut curr_section_name = String::new();
         for line in reader.lines() {
             if let Ok(lstr) = line {
-                if let Some(section_name) = Section::get_section_name_from_string(&lstr) {
-                    let st_name = String::from(section_name);
-                    self.sections.insert(st_name.clone(), Section::new(st_name.clone()));
-                    curr_section_name = st_name;
+                if let Some(section_name) = Section::get_section_name_from_string(&lstr) {                    
+                    self.add_section_to_data_structure(section_name);
+                    curr_section_name = section_name.to_string();
                 }
                 else if let Some((k, v)) = KeynoteFile::get_entry_from_string(&lstr) {
                     let section = self.get_section(&curr_section_name);
                     match section {
                         Some(section) => section.add_entry(k, v), 
                         None => { 
-                            eprintln!("error: file format corrupted");
-                            return 
+                            return Err("error: file format corrupted".into());
+                            
                         }
                     };
                 }
             }            
         }
+        Ok(())
     }         
 
     pub fn new<'a>() -> Result<KeynoteFile, &'a str> {
@@ -107,9 +109,7 @@ impl KeynoteFile {
         if self.contains_key(key) {
             println!("key: {} already exists. no key added", key);
             return Ok(())
-        }
-
-        self.load_data();
+        }      
         
         // insert into data structure
         if let Some(section) = self.get_section(section_to_add_to){
@@ -151,8 +151,7 @@ impl KeynoteFile {
         Ok(())
     }
 
-    pub fn list_keys(mut self) {
-        self.load_data();
+    pub fn list_keys(self) {        
         for (_, section) in self.sections {   
             if section.data.len() != 0 {
                 println!("{}", section.name)
@@ -167,9 +166,7 @@ impl KeynoteFile {
     pub fn remove_key(mut self, key: &str) -> Result<(), Box<dyn Error>>{
         if !self.contains_key(key) {
             return Err("key: '{}' does not exist. nothing removed".into());            
-        }
-
-        self.load_data();
+        }     
 
         // * write the new key to the file
         // ** open file and read all lines
@@ -216,9 +213,7 @@ impl KeynoteFile {
         Ok(())
     }
 
-    pub fn remove_section(&mut self, section_to_remove: &str) -> Result<(), Box<dyn Error>> {
-        // * write the new key to the file
-        // ** open file and read all lines
+    pub fn remove_section(&mut self, section_to_remove: &str) -> Result<(), Box<dyn Error>> {    
         let file = KeynoteFile::open_keynote_file(&self.filepath)?;
         let reader = io::BufReader::new(file);
             
@@ -226,9 +221,8 @@ impl KeynoteFile {
         let mut tmp_file = KeynoteFile::open_keynote_file(&tmp_filepath)?;
 
         let mut writing = true;
-
         for line in reader.lines() {
-            let line = line.unwrap();                
+            let line = line.unwrap();               
             let line = ensure_newline(&line);
 
             let section_name = Section::get_section_name_from_string(&line.trim_end());
@@ -250,11 +244,13 @@ impl KeynoteFile {
         fs::remove_file(self.filepath.clone())?;
         fs::rename(tmp_filepath, self.filepath.clone())?;        
         
+        // remove from data structure
+        self.sections.remove(section_to_remove);
+
         Ok(())
     }
     
-    pub fn list_sections(mut self) {
-        self.load_data();
+    pub fn list_sections(self) {        
         if self.sections.len() == 0 {
             println!("keynotes data file is empty");
             return
@@ -268,25 +264,16 @@ impl KeynoteFile {
         if !is_alphabetic(section_name) {
             println!("'{}' is not a valid section name", section_name);
             return Ok(())
-        }        
+        }   
 
-        // refresh the data structure
-        self.load_data();
         if let Some(_) = self.get_section(section_name) {
-            return Err("section already exists".into());
-            
-        }
-        // Add Section object to data structure
-        self.sections.insert(String::from(section_name), Section::new(String::from(section_name)));
-
-        // Add string representation of Section to file
-        // build section header string 
-        let section_header_str = Section::build_section_string(section_name);        
+            return Err("section already exists".into());            
+        }        
         
-        // open the file 
-        let file_opt = KeynoteFile::open_keynote_file(&self.filepath);            
-        if let Err(_) = file_opt { return Err("error: failed to open keynote data file".into()) }
-        let mut file = file_opt.unwrap();            
+        self.add_section_to_data_structure(section_name);
+    
+        let section_header_str = Section::build_section_string(section_name);
+        let mut file = KeynoteFile::open_keynote_file(&self.filepath)?;
 
         // write the section header
         file.write(section_header_str.as_bytes())?;            
@@ -296,8 +283,7 @@ impl KeynoteFile {
         Ok(())
     }  
 
-    pub fn get_value_from_key(&mut self, key: &str) -> Option<&str>{
-        self.load_data();    
+    pub fn get_value_from_key(&mut self, key: &str) -> Option<&str>{           
         for (_, section) in &self.sections {
             if let Some(value) = section.data.get(key) {
                 return Some(value)
@@ -306,8 +292,7 @@ impl KeynoteFile {
         None
     }
     
-    pub fn contains_key(&mut self, key: &str) -> bool {    
-        self.load_data();    
+    pub fn contains_key(&mut self, key: &str) -> bool {           
         for (_, section) in &self.sections {
             if section.data.contains_key(key) {
                 return true;
