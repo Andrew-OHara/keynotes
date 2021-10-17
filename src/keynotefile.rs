@@ -181,9 +181,9 @@ impl KeynoteFile {
         }
     }
 
-    pub fn remove_key(mut self, key: &str) -> Result<(), &str>{
+    pub fn remove_key(mut self, key: &str) -> Result<(), Box<dyn Error>>{
         if !self.contains_key(key) {
-            return Err("key: '{}' does not exist. nothing removed");            
+            return Err("key: '{}' does not exist. nothing removed".into());            
         }
 
         self.load_data();
@@ -196,7 +196,7 @@ impl KeynoteFile {
             let tmp_filepath = self.filepath.with_file_name("_kntemp.dat");
             let tmp_file = KeynoteFile::open_keynote_file(&tmp_filepath);
             if let None = tmp_file {
-                return Err("failed to create temporary file. no key added");                
+                return Err("failed to create temporary file. no key added".into());                
             }
             
             let mut tmp_file = tmp_file.unwrap();
@@ -209,10 +209,7 @@ impl KeynoteFile {
                 if let Some((k, _)) = KeynoteFile::get_entry_from_string(&line) {
                     // line is an entry, only write if it's not the key we're removing
                     if k != key {
-                        if let Err(_) = tmp_file.write_all(line.as_bytes()) {
-                            // TODO: delete the temporary file here?
-                            return Err("error: failed to write to temporary file. no key added");   
-                        } 
+                        tmp_file.write_all(line.as_bytes())?;                             
                     } 
                     else {
                         // remove from data structure
@@ -225,26 +222,17 @@ impl KeynoteFile {
                     match curr_section_opt {
                         Some(v) => curr_section_name = v.to_string(),
                         None => {                            
-                            return Err("error: file corrupted");                            
+                            return Err("error: file corrupted".into());                            
                         }
                     };
 
-                    if let Err(_) = tmp_file.write_all(line.as_bytes()) {
-                        // TODO: delete the temporary file here?
-                        return Err("error: failed to write to temporary file. no key added");
-                    }
+                    tmp_file.write_all(line.as_bytes())?;
                 };                                
             }
             
             // now we need to delete the old file and rename the temp one
-            if let Err(_) = fs::remove_file(self.filepath.clone()) {
-                return Err("error: could not delete original file");                
-            }
-
-            if let Err(_) = fs::rename(tmp_filepath, self.filepath.clone()) {
-                // TODO: delete the temporary file here?
-                return Err("error: could not rename temp file file");                 
-            }
+            fs::remove_file(self.filepath.clone())?;
+            fs::rename(tmp_filepath, self.filepath.clone())?;
         }
         Ok(())
     }
