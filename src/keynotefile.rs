@@ -1,6 +1,6 @@
 use std::{fs, fs::{OpenOptions, File}, io, io::{Write, prelude::*}, collections::HashMap, path::PathBuf, error::Error};
-use section::*;
-use kn_utils::*;
+pub use section::*;
+pub use kn_utils::*;
 
 mod kn_utils;
 mod section;

@@ -1,5 +1,4 @@
 use std::{env, error::Error};
-
 use keynotes::KeynoteFile;
 
 fn main() -> Result<(), Box<dyn Error>> {
@@ -42,8 +41,7 @@ fn main() -> Result<(), Box<dyn Error>> {
             
         },
         "-ls" => {            
-            file.list_sections();
-        
+            file.list_sections();        
         },
         "-ak" => {
 
@@ -52,11 +50,9 @@ fn main() -> Result<(), Box<dyn Error>> {
                 return Ok(())                  
             }        
 
-            if let (Some(section_to_add_to), Some(key), Some(value)) = (args.get(2), args.get(3), args.get(4)) {
-                
+            if let (Some(section_to_add_to), Some(key), Some(value)) = (args.get(2), args.get(3), args.get(4)) {                
                 println!("adding <{}>  {}  to  {}", key, value, section_to_add_to);
-                file.add_key(section_to_add_to, key, value)?;
-                               
+                file.add_key(section_to_add_to, key, value)?;                               
             }
             else {
                 return Err("parameters not valid. no key added.".into());
@@ -65,13 +61,11 @@ fn main() -> Result<(), Box<dyn Error>> {
         },
         "-rk" => {
             if args.len() != 3 {                
-                return Err("list data usage:    kn -rk [key]      key is mandatory.  see kn -help for details".into());
-                
+                return Err("list data usage:    kn -rk [key]      key is mandatory.  see kn -help for details".into());                
             }
             if let Some(key) = args.get(2) {
                 println!("removing key: {}", key);
-                file.remove_key(key)?;
-                                         
+                file.remove_key(key)?;                                         
             }; 
         },
         "-lk" => {
