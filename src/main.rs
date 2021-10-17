@@ -1,5 +1,4 @@
 use std::{env, error::Error};
-use keynotes::KeynoteFile;
 
 fn main() -> Result<(), Box<dyn Error>> {
     let args: Vec<String> = env::args().collect();
@@ -14,7 +13,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     };
     
     // create file struct
-    let mut file = KeynoteFile::new()?;   
+    let mut file = keynotes::KeynoteFile::new()?;   
     file.load_data()?; 
 
     // handle various run modes as delineated by option
