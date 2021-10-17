@@ -61,29 +61,28 @@ impl KeynoteFile {
     }
 
     pub fn load_data(&mut self) -> Result<(), Box<dyn Error>> {
-        // open the file 
         let file = KeynoteFile::open_keynote_file(&self.filepath)?;
 
         // read lines one at a time, checking for sections and reading them into the data structure
         let reader = io::BufReader::new(file);         
         let mut curr_section_name = String::new();
         for line in reader.lines() {
-            if let Ok(lstr) = line {
-                if let Some(section_name) = Section::get_section_name_from_string(&lstr) {                    
-                    self.add_section_to_data_structure(section_name);
-                    curr_section_name = section_name.to_string();
-                }
-                else if let Some((k, v)) = KeynoteFile::get_entry_from_string(&lstr) {
-                    let section = self.get_section(&curr_section_name);
-                    match section {
-                        Some(section) => section.add_entry(k, v), 
-                        None => { 
-                            return Err("error: file format corrupted".into());
-                            
-                        }
-                    };
-                }
-            }            
+            if let Err(_) = line { return Err("error: unable to load data".into()) }
+
+            let line = line.unwrap();            
+            if let Some(section_name) = Section::get_section_name_from_string(&line) {        // handle sections           
+                self.add_section_to_data_structure(section_name);
+                curr_section_name = section_name.to_string();
+            }
+            else if let Some((k, v)) = KeynoteFile::get_entry_from_string(&line) {          // handle entries
+                let section = self.get_section(&curr_section_name);
+                match section {
+                    Some(section) => section.add_entry(k, v), 
+                    None => { 
+                        return Err("error: file format corrupted".into());                            
+                    }
+                };
+            }                        
         }
         Ok(())
     }         
