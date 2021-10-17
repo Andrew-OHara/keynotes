@@ -1,4 +1,7 @@
+mod section;
+
 use std::{fs::OpenOptions, io, io::{Write, prelude::*}, collections::HashMap};
+use section::Section;
 
 fn ensure_newline(line: &str) -> String {
     if let Some(c) = line.chars().last() {
@@ -8,41 +11,6 @@ fn ensure_newline(line: &str) -> String {
     }
 
     return line.to_string();
-}
-
-pub struct Section {
-    name : String,
-    data : HashMap<String, String>
-}
-
-impl Section {
-    fn new(name : String) -> Section {
-        Section {
-            name,
-            data : HashMap::new()
-        }
-    }
-
-    fn build_section_string(section_name: &str) -> String {
-        let mut header_string = String::new();
-        header_string.push('<');
-        header_string.push_str(section_name);
-        header_string.push_str(">\n");
-
-        header_string
-    } 
-    
-    fn get_section_name_from_string(line : &str) -> Option<&str> {
-        if !line.contains("<") || !line.contains(">") || line.contains("\t") {  // not a valid section name
-            return None
-        }
-
-        Some(&line[1..line.len()-1])
-    } 
-
-    fn add_entry(&mut self, key: &str, value: &str) {
-        self.data.insert(key.to_string(), value.to_string());
-    }
 }
 
 pub struct KeynoteFile {
