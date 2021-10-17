@@ -1,17 +1,9 @@
 mod section;
+mod kn_utils;
 
 use std::{fs::OpenOptions, io, io::{Write, prelude::*}, collections::HashMap};
 use section::Section;
-
-fn ensure_newline(line: &str) -> String {
-    if let Some(c) = line.chars().last() {
-        if c != '\n' {
-            return String::from(format!("{}{}", line, '\n'));
-        }
-    }
-
-    return line.to_string();
-}
+use kn_utils::{ensure_newline, is_alphabetic};
 
 pub struct KeynoteFile {
     pub filepath : std::path::PathBuf,
@@ -377,16 +369,6 @@ impl KeynoteFile {
         }
         return false
     }
-}
-
-pub fn is_alphabetic(s : &str) -> bool {
-    for c in s.chars() {
-        if !c.is_alphabetic() {            
-            return false
-        }
-    }
-
-    true
 }
 
 #[cfg(test)]
