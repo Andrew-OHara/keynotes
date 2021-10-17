@@ -23,7 +23,7 @@ fn main() -> Result<(), Box<dyn Error>> {
             
             let section_name_opt = args.get(2);
             if let Some(section_name) = section_name_opt {
-                file.add_section(section_name);
+                file.add_section(section_name)?;
             }      
             else {
                 println!("add section usage:    kn -as [sectionName]     sectionName is mandatory.  see kn -help for details");
@@ -33,7 +33,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         "-rs" => {
             if let Some(section_to_remove) = args.get(2) {
                 println!("removing {}", section_to_remove);
-                file.remove_section(section_to_remove);                
+                file.remove_section(section_to_remove)?;                
             }
             else {
                 println!("remove section usage:    kn -rs [sectionName]     sectionName is mandatory.  see kn -help for details");

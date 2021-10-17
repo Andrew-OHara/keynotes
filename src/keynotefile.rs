@@ -237,7 +237,7 @@ impl KeynoteFile {
         Ok(())
     }
 
-    pub fn remove_section(&mut self, section_to_remove: &str) {
+    pub fn remove_section(&mut self, section_to_remove: &str) -> Result<(), Box<dyn Error>> {
         // * write the new key to the file
         // ** open file and read all lines
         if let Some(file) = KeynoteFile::open_keynote_file(&self.filepath) {
@@ -246,8 +246,7 @@ impl KeynoteFile {
             let tmp_filepath = self.filepath.with_file_name("_kntemp.dat");
             let tmp_file = KeynoteFile::open_keynote_file(&tmp_filepath);
             if let None = tmp_file {
-                eprintln!("failed to create temporary file. no key added");
-                return;
+                return Err("failed to create temporary file. no key added".into());                
             }
             
             let mut tmp_file = tmp_file.unwrap();
@@ -269,27 +268,18 @@ impl KeynoteFile {
                 if writing || (!writing &&  Section::get_section_name_from_string(&line).is_some()){
                     // !writing in here means we just found a new section after skipping the last, start writing again
                     if !writing { writing = true; } 
-                    if let Err(_) = tmp_file.write_all(line.as_bytes()) {
-                        eprintln!("error: failed to write to temporary file. no key added");
-                        // TODO: delete the temporary file here?
-                        return;
-                    }
+                    tmp_file.write_all(line.as_bytes())?;
+                        
                 }
             }
 
             // now we need to delete the old file and rename the temp one
 
-            if let Err(_) = fs::remove_file(self.filepath.clone()) {
-                eprintln!("error: could not delete original file");
-                return;
-            }
-
-            if let Err(_) = fs::rename(tmp_filepath, self.filepath.clone()) {
-                // TODO: delete the temporary file here?
-                eprintln!("error: could not rename temp file file");
-                return;  
-            }
+            fs::remove_file(self.filepath.clone())?;
+            fs::rename(tmp_filepath, self.filepath.clone())?;
         }
+        
+        Ok(())
     }
     
     pub fn list_sections(mut self) {
@@ -303,17 +293,17 @@ impl KeynoteFile {
         }
     }
 
-    pub fn add_section(&mut self, section_name : &str) {       
+    pub fn add_section(&mut self, section_name : &str) -> Result<(), Box<dyn Error>> {       
         if !is_alphabetic(section_name) {
             println!("'{}' is not a valid section name", section_name);
-            return
+            return Ok(())
         }        
 
         // refresh the data structure
         self.load_data();
         if let Some(_) = self.get_section(section_name) {
-            println!("section named '{}' already exists", section_name);
-            return
+            return Err("section already exists".into());
+            
         }
         // Add Section object to data structure
         self.sections.insert(String::from(section_name), Section::new(String::from(section_name)));
@@ -324,19 +314,17 @@ impl KeynoteFile {
         
         // open the file 
         let file_opt = KeynoteFile::open_keynote_file(&self.filepath);            
-        if let None = file_opt { return }
+        if let None = file_opt { return Err("error: failed to open keynote data file".into()) }
         let mut file = file_opt.unwrap();            
 
         // write the section header
-        if let Err(_) = file.write(section_header_str.as_bytes()) {
-            println!("error: unable to write to keynotes data file");
-            return
-        }
+        file.write(section_header_str.as_bytes())?;            
         
         println!("'{}' added", section_name);
+
+        Ok(())
     }  
 
-    // TODO: good candidate for Result rather than option
     pub fn get_value_from_key(&mut self, key: &str) -> Option<&str>{
         self.load_data();    
         for (_, section) in &self.sections {
