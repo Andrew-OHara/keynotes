@@ -38,7 +38,7 @@ impl Section {
 
 #[cfg(test)]
 mod tests {            
-    use super::super::*;
+    use super::*;
 
     #[test]
     fn new_success() {

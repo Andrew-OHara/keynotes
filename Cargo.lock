@@ -3,6 +3,12 @@
 version = 3
 
 [[package]]
+name = "aoutils"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b633390fde3d7cdd94191ed4180ed3e3982d315ba9fd347d76b8719e4fbd0de4"
+
+[[package]]
 name = "home"
 version = "0.5.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -15,6 +21,7 @@ dependencies = [
 name = "keynotes"
 version = "0.1.0"
 dependencies = [
+ "aoutils",
  "home",
 ]
 
