@@ -50,22 +50,13 @@ fn main() -> Result<(), &'static str> {
             if args.len() != 5 {
                 println!("add key usage:    kn -ak [sectionToAddTo] [key] [value]       all options mandatory.  see kn -help for details"); 
                 return Ok(())                  
-            }
+            }        
 
-            let section_to_add_to = args.get(2);
-            let key = args.get(3);
-            let value = args.get(4);
-
-            if let (Some(s), Some(k), Some(v)) = (section_to_add_to, key, value) {
-                if !file.contains_key(k) {
-                    println!("adding <{}>  {}  to  {}", k, v, s);
-                    file.add_key(s, k, v);                    
-                }
-                else {
-                    println!("key: {} already exists. no key added", k);
-                    return Ok(())
-                }
+            if let (Some(section_to_add_to), Some(key), Some(value)) = (args.get(2), args.get(3), args.get(4)) {
                 
+                println!("adding <{}>  {}  to  {}", key, value, section_to_add_to);
+                file.add_key(section_to_add_to, key, value)?
+                               
             }
             else {
                 return Err("parameters not valid. no key added.");

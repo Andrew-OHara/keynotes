@@ -109,7 +109,12 @@ impl KeynoteFile {
         })
     }
 
-    pub fn add_key(mut self, section_to_add_to: &str, key: &str, value: &str) {
+    pub fn add_key<'a>(mut self, section_to_add_to: &str, key: &str, value: &str) -> Result<(), &'a str> {
+        if self.contains_key(key) {
+            println!("key: {} already exists. no key added", key);
+            return Ok(())
+        }
+        
         self.load_data();
         
         // insert into data structure
@@ -118,7 +123,7 @@ impl KeynoteFile {
         }
         else {
             println!("cannot add to '{}'. that section does not exist", section_to_add_to);
-            return;
+            return Ok(());
         }
 
         // * write the new key to the file
@@ -129,8 +134,7 @@ impl KeynoteFile {
             let tmp_filepath = self.filepath.with_file_name("_kntemp.dat");
             let tmp_file = KeynoteFile::open_keynote_file(&tmp_filepath);
             if let None = tmp_file {
-                eprintln!("error: failed to create temporary file. no key added");
-                return;
+                return Err("error: failed to create temporary file. no key added");               
             }
             
             let mut tmp_file = tmp_file.unwrap();
@@ -140,20 +144,18 @@ impl KeynoteFile {
                 let line = ensure_newline(&line);             
 
                 if let Err(_) = tmp_file.write_all(line.as_bytes()) {
-                    eprintln!("error: failed to write to temporary file. no key added");
                     // TODO: delete the temporary file here?
-                    return;
+                    return Err("error: failed to write to temporary file. no key added");                   
                 }
                
                 if let Some(section_name) = Section::get_section_name_from_string(&line.trim_end()) {
                     if section_name == section_to_add_to {
-                        // add new entry
+                        // add new entry to file
                         let entry = KeynoteFile::build_entry_string(key, value);
 
                         if let Err(_) = tmp_file.write_all(entry.as_bytes()) {
-                            eprintln!("error: failed to write to temporary file. no key added");
                             // TODO: delete the temporary file here?
-                            return;
+                            return Err("error: failed to write to temporary file. no key added");                            
                         }
                     }
                 }
@@ -161,20 +163,18 @@ impl KeynoteFile {
 
             // now we need to delete the old file and rename the temp one
             if let Err(_) = std::fs::remove_file(self.filepath.clone()) {
-                eprintln!("error: could not delete original file");
-                return;
+                return Err("error: could not delete original file");                
             }
 
-            if let Err(_) =std::fs::rename(tmp_filepath, self.filepath.clone()) {
+            if let Err(_) = std::fs::rename(tmp_filepath, self.filepath.clone()) {
                 // TODO: delete the temporary file here?
-                eprintln!("error: could not rename temp file file");
-                return;  
-            }
+                return Err("error: could not rename temp file file");                 
+            };
 
         } else {
-            eprintln!("error: unable to open file, no key written");
-            return;
+            return Err("error: unable to open file, no key written");            
         }
+        Ok(())
     }
 
     pub fn list_keys(mut self) {
