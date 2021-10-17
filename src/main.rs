@@ -1,8 +1,8 @@
-use std::env;
+use std::{env, error::Error};
 
 use keynotes::KeynoteFile;
 
-fn main() -> Result<(), &'static str> {
+fn main() -> Result<(), Box<dyn Error>> {
     let args: Vec<String> = env::args().collect();
 
     // fail if no arguments passed, otherwise get option param 
@@ -59,18 +59,19 @@ fn main() -> Result<(), &'static str> {
                                
             }
             else {
-                return Err("parameters not valid. no key added.");
+                return Err("parameters not valid. no key added.".into());
             };
             
         },
         "-rk" => {
             if args.len() != 3 {                
-                return Err("list data usage:    kn -rk [key]      key is mandatory.  see kn -help for details");
+                return Err("list data usage:    kn -rk [key]      key is mandatory.  see kn -help for details".into());
                 
             }
             if let Some(key) = args.get(2) {
                 println!("removing key: {}", key);
-                file.remove_key(key);                
+                file.remove_key(key)?;
+                                         
             }; 
         },
         "-lk" => {
@@ -78,11 +79,11 @@ fn main() -> Result<(), &'static str> {
         },
         "-ld" => {
             if args.len() != 3 {                
-                return Err("list data usage:    kn -ld [key]      key is mandatory.  see kn -help for details");                
+                return Err("list data usage:    kn -ld [key]      key is mandatory.  see kn -help for details".into());                
             }
             if let Some(key) = args.get(2) {
-                if let Some(entry) = file.get_value_from_key(key) {
-                    println!("{}:   {}", key, entry);
+                if let Some(value) = file.get_value_from_key(key) {
+                    println!("{}:   {}", key, value);
                 }
                 else {
                     println!("key {} does not exist", key);
@@ -97,5 +98,7 @@ fn main() -> Result<(), &'static str> {
             action param as the name. Disallows duplicate section names. \n\t\t\t\t\t\t  Section names must be alphabetical\n");
         }        
     };
+
     Ok(())   
+
  }

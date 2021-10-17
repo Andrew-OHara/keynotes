@@ -97,12 +97,14 @@ impl KeynoteFile {
     pub fn new<'a>() -> Result<KeynoteFile, &'a str> {
         // build path to keynotes.dat file        
         let mut data_filepath = match home::home_dir() {
-        Some(path_buffer) => path_buffer,
-        None => {            
-            return Err("error: unable to find home directory") 
-        }
-    };        
-    data_filepath.push(".keynotes/keynotes.dat");
+            Some(path_buffer) => path_buffer,
+            None => {            
+                return Err("error: unable to find home directory") 
+            }
+        };        
+        
+        data_filepath.push(".keynotes/keynotes.dat");
+        
         Ok(KeynoteFile {
             sections: HashMap::new(),
             filepath: data_filepath 
@@ -114,7 +116,7 @@ impl KeynoteFile {
             println!("key: {} already exists. no key added", key);
             return Ok(())
         }
-        
+
         self.load_data();
         
         // insert into data structure
@@ -190,10 +192,9 @@ impl KeynoteFile {
         }
     }
 
-    pub fn remove_key(&mut self, key: &str) {
+    pub fn remove_key(mut self, key: &str) -> Result<(), &str>{
         if !self.contains_key(key) {
-            println!("key: '{}' does not exist. nothing removed", key);
-            return;
+            return Err("key: '{}' does not exist. nothing removed");            
         }
 
         self.load_data();
@@ -206,8 +207,7 @@ impl KeynoteFile {
             let tmp_filepath = self.filepath.with_file_name("_kntemp.dat");
             let tmp_file = KeynoteFile::open_keynote_file(&tmp_filepath);
             if let None = tmp_file {
-                eprintln!("failed to create temporary file. no key added");
-                return;
+                return Err("failed to create temporary file. no key added");                
             }
             
             let mut tmp_file = tmp_file.unwrap();
@@ -221,9 +221,8 @@ impl KeynoteFile {
                     // line is an entry, only write if it's not the key we're removing
                     if k != key {
                         if let Err(_) = tmp_file.write_all(line.as_bytes()) {
-                            eprintln!("error: failed to write to temporary file. no key added");
                             // TODO: delete the temporary file here?
-                            return;
+                            return Err("error: failed to write to temporary file. no key added");   
                         } 
                     } 
                     else {
@@ -237,32 +236,28 @@ impl KeynoteFile {
                     match curr_section_opt {
                         Some(v) => curr_section_name = v.to_string(),
                         None => {                            
-                            eprintln!("error: file corrupted");
-                            return;
+                            return Err("error: file corrupted");                            
                         }
                     };
 
                     if let Err(_) = tmp_file.write_all(line.as_bytes()) {
-                        eprintln!("error: failed to write to temporary file. no key added");
                         // TODO: delete the temporary file here?
-                        return;
+                        return Err("error: failed to write to temporary file. no key added");
                     }
                 };                                
             }
             
             // now we need to delete the old file and rename the temp one
             if let Err(_) = std::fs::remove_file(self.filepath.clone()) {
-                eprintln!("error: could not delete original file");
-                return;
+                return Err("error: could not delete original file");                
             }
 
             if let Err(_) = std::fs::rename(tmp_filepath, self.filepath.clone()) {
                 // TODO: delete the temporary file here?
-                eprintln!("error: could not rename temp file file");
-                return;  
+                return Err("error: could not rename temp file file");                 
             }
-
         }
+        Ok(())
     }
 
     pub fn remove_section(&mut self, section_to_remove: &str) {
