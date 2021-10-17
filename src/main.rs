@@ -1,6 +1,6 @@
 use std::{env, process, collections::HashMap};
 
-use keynotes::*;
+use keynotes::KeynoteFile;
 
 const NO_OPTIONS : i32 = -0x1;
 const NO_HOME : i32 = -0x2;
@@ -129,15 +129,3 @@ fn main() {
         }        
     };    
  }
- 
- #[cfg(test)]
- mod tests {
-     mod main_tests {
-        use super::super::*;
-
-        #[test]
-        fn main_test() {
-            assert_eq!(NO_OPTIONS, -0x1);
-        }
-    }
-}

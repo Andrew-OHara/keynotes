@@ -1,10 +1,9 @@
-pub mod kn_utils;
-pub mod section;
-
 use std::{fs::OpenOptions, io, io::{Write, prelude::*}, collections::HashMap};
+use section::*;
+use kn_utils::*;
 
-pub use section::*;
-pub use kn_utils::*;
+mod kn_utils;
+mod section;
 
 pub struct KeynoteFile {
     pub filepath : std::path::PathBuf,
