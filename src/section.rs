@@ -23,12 +23,18 @@ impl Section {
     
     // this both gets the name from the string and validates that the string is correct section format
     pub fn get_section_name_from_string(line : &str) -> Option<&str> {
-        if !line.starts_with("<") || !line.contains(">") || line.contains("\t") || !line.ends_with("\n"){  // not a valid section name
+        if !line.starts_with("<") || !line.contains(">") || line.contains("\t") {  // not a valid section name
             return None
         }
         
+        let chars_to_subtract = if line.ends_with("\n") {
+            2
+        } else {
+            1
+        };
+
         // len - 2 excludes the newline and the '>'
-        Some(&line[1..line.len()-2])
+        Some(&line[1..line.len()-chars_to_subtract])
     } 
 
     pub fn add_entry(&mut self, key: &str, value: &str) {
@@ -66,7 +72,8 @@ mod tests {
     #[test]
     fn get_section_name_from_string_no_newline_expect_none() {
         let result = Section::get_section_name_from_string("<test_section>");
-        assert!(result.is_none());
+        assert!(result.is_some());
+        assert_eq!(result.unwrap(), "test_section");
     }
 
     #[test]

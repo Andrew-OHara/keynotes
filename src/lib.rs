@@ -3,7 +3,7 @@ use std::{fs, fs::{OpenOptions, File}, io, io::{Write, prelude::*}, collections:
 mod section;
 
 use aoutils::*;
-pub use section::*;
+use section::*;
 
 pub struct KeynoteFile {
     pub filepath : PathBuf,
