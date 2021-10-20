@@ -22,14 +22,26 @@ fn main() -> Result<(), Box<dyn Error>> {
             
             let section_name_opt = args.get(2);
             if let Some(section_name) = section_name_opt {                
-                file.add_section(section_name)?;
+                if let Err(e) = file.add_section(section_name) {
+                    if e.to_string() == format!("'{}' is not a valid section name", section_name) ||
+                        e.to_string() == "section already exists" {
+                            println!("{}", e.to_string());
+                            return Ok(())
+                    }
+                    else {
+                        return Err(e);
+                    }                    
+                }
+                println!("added section '{}'", section_name);
             }      
             else {
                 println!("add section usage:    kn -as [sectionName]     sectionName is mandatory.  see kn -help for details");
-            }            
+            }
+
         },
 
         "-rs" => {
+
             if let Some(section_to_remove) = args.get(2) {                
                 println!("removing {}", section_to_remove);
                 file.remove_section(section_to_remove)?;                
@@ -39,8 +51,16 @@ fn main() -> Result<(), Box<dyn Error>> {
             };
             
         },
-        "-ls" => {            
-            file.list_sections();        
+        "-ls" => {
+
+            if file.get_sections().len() == 0 {
+                println!("keynotes data file is empty");
+                return Ok(())
+            }
+            for section in file.get_sections() {
+                println!("{}", section.0);
+            }  
+
         },
         "-ak" => {
 
@@ -51,7 +71,16 @@ fn main() -> Result<(), Box<dyn Error>> {
 
             if let (Some(section_to_add_to), Some(key), Some(value)) = (args.get(2), args.get(3), args.get(4)) {                
                 println!("adding <{}>  {}  to  {}", key, value, section_to_add_to);
-                file.add_key(section_to_add_to, key, value)?;                               
+                if let Err(e) = file.add_key(section_to_add_to, key, value) {
+                    if  e.to_string() == "key: {} already exists. no key added." || 
+                        e.to_string() == "cannot add to '{}'. that section does not exist" {
+                        
+                        println!("{}", e.to_string());
+                    }
+                    else {
+                        return Err(e.to_string().into());
+                    }
+                }                               
             }
             else {
                 return Err("parameters not valid. no key added.".into());
@@ -59,18 +88,38 @@ fn main() -> Result<(), Box<dyn Error>> {
             
         },
         "-rk" => {
+
             if args.len() != 3 {                
                 return Err("list data usage:    kn -rk [key]      key is mandatory.  see kn -help for details".into());                
             }
             if let Some(key) = args.get(2) {
                 println!("removing key: {}", key);
-                file.remove_key(key)?;                                         
+                if let Err(e) = file.remove_key(key) {
+                    if e.to_string() == "key: '{}' does not exist. nothing removed" {
+                        println!("{}", e.to_string());
+                    }
+                    else {
+                        return Err(e);
+                    }
+                }                                        
             }; 
+
         },
         "-lk" => {
-            file.list_keys();
+
+            for (_, section) in file.get_sections() {   
+                if section.data.len() != 0 {
+                    println!("{}", section.name)
+                }    
+    
+                for (k, _) in section.data.iter() {
+                    println!("\t{}", k);
+                }
+            }
+
         },
         "-ld" => {
+
             if args.len() != 3 {                
                 return Err("list data usage:    kn -ld [key]      key is mandatory.  see kn -help for details".into());                
             }
@@ -81,7 +130,8 @@ fn main() -> Result<(), Box<dyn Error>> {
                 else {
                     println!("key {} does not exist", key);
                 };
-            };            
+            };  
+                      
         },
 
         // TODO: put the help string into a file that gets loaded

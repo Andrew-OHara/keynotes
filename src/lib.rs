@@ -7,7 +7,7 @@ use section::*;
 
 pub struct KeynoteFile {
     pub filepath : PathBuf,
-    pub sections : HashMap<String, Section> 
+    sections : HashMap<String, Section> 
 }
 
 impl KeynoteFile {
@@ -106,8 +106,7 @@ impl KeynoteFile {
 
     pub fn add_key<'a>(mut self, section_to_add_to: &str, key: &str, value: &str) -> Result<(), Box<dyn Error>> {
         if self.contains_key(key) {
-            println!("key: {} already exists. no key added", key);
-            return Ok(())
+            return Err(format!("key: {} already exists. no key added.", key).into());            
         }      
         
         // insert into data structure
@@ -115,8 +114,8 @@ impl KeynoteFile {
             section.add_entry(key, value);
         }
         else {
-            println!("cannot add to '{}'. that section does not exist", section_to_add_to);
-            return Ok(());
+            return Err(format!("cannot add to '{}'. that section does not exist", section_to_add_to).into());
+            
         }
 
         // write the new key to the file        
@@ -149,21 +148,9 @@ impl KeynoteFile {
         Ok(())
     }
 
-    pub fn list_keys(self) {        
-        for (_, section) in self.sections {   
-            if section.data.len() != 0 {
-                println!("{}", section.name)
-            }    
-
-            for (k, _) in section.data {
-                println!("\t{}", k);
-            }
-        }
-    }
-
     pub fn remove_key(mut self, key: &str) -> Result<(), Box<dyn Error>>{
         if !self.contains_key(key) {
-            return Err("key: '{}' does not exist. nothing removed".into());            
+            return Err(format!("key: '{}' does not exist. nothing removed.", key).into());            
         }     
 
         // write the new key to the file        
@@ -247,20 +234,13 @@ impl KeynoteFile {
         Ok(())
     }
     
-    pub fn list_sections(self) {        
-        if self.sections.len() == 0 {
-            println!("keynotes data file is empty");
-            return
-        }
-        for section in self.sections {
-            println!("{}", section.0);
-        }
+    pub fn get_sections(&self) -> &HashMap<String, Section> {
+        return &self.sections;
     }
 
     pub fn add_section(&mut self, section_name : &str) -> Result<(), Box<dyn Error>> {       
         if !is_alphabetic(section_name) {
-            println!("'{}' is not a valid section name", section_name);
-            return Ok(())
+            return Err(format!("'{}' is not a valid section name", section_name).into());            
         }   
 
         if let Some(_) = self.get_section(section_name) {
@@ -273,9 +253,7 @@ impl KeynoteFile {
         let mut file = KeynoteFile::open_keynote_file(&self.filepath)?;
 
         // write the section header
-        file.write(section_header_str.as_bytes())?;            
-        
-        println!("'{}' added", section_name);
+        file.write(section_header_str.as_bytes())?;        
 
         Ok(())
     }  
