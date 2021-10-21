@@ -27,11 +27,7 @@ impl Section {
             return None
         }
         
-        let chars_to_subtract = if line.ends_with("\n") {
-            2
-        } else {
-            1
-        };
+        let chars_to_subtract = if line.ends_with("\n") {   2   } else {    1   };
 
         // len - 2 excludes the newline and the '>'
         Some(&line[1..line.len()-chars_to_subtract])

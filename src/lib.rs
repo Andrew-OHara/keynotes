@@ -11,6 +11,23 @@ pub struct KeynoteFile {
 }
 
 impl KeynoteFile {
+    pub fn new<'a>() -> Result<KeynoteFile, &'a str> {
+        // build path to keynotes.dat file        
+        let mut data_filepath = match home::home_dir() {
+            Some(path_buffer) => path_buffer,
+            None => {            
+                return Err("error: unable to find home directory") 
+            }
+        };        
+        
+        data_filepath.push(".keynotes/keynotes.dat");
+        
+        Ok(KeynoteFile {
+            sections: HashMap::new(),
+            filepath: data_filepath 
+        })
+    }
+
     fn open_keynote_file(filepath : &PathBuf) -> Result<File, Box<dyn Error>>{
         // obtain the path to the path_buf parent folder
         let mut folder = filepath.clone();
@@ -85,24 +102,7 @@ impl KeynoteFile {
             }                        
         }
         Ok(())
-    }         
-
-    pub fn new<'a>() -> Result<KeynoteFile, &'a str> {
-        // build path to keynotes.dat file        
-        let mut data_filepath = match home::home_dir() {
-            Some(path_buffer) => path_buffer,
-            None => {            
-                return Err("error: unable to find home directory") 
-            }
-        };        
-        
-        data_filepath.push(".keynotes/keynotes.dat");
-        
-        Ok(KeynoteFile {
-            sections: HashMap::new(),
-            filepath: data_filepath 
-        })
-    }
+    }   
 
     pub fn add_key<'a>(mut self, section_to_add_to: &str, key: &str, value: &str) -> Result<(), Box<dyn Error>> {
         if self.contains_key(key) {
@@ -152,8 +152,7 @@ impl KeynoteFile {
         if !self.contains_key(key) {
             return Err(format!("key: '{}' does not exist. nothing removed.", key).into());            
         }     
-
-        // write the new key to the file        
+              
         let file = KeynoteFile::open_keynote_file(&self.filepath)?;
         let reader = io::BufReader::new(file);
             
@@ -274,5 +273,92 @@ impl KeynoteFile {
             }
         }
         return false
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn get_path_to_test_file() -> PathBuf {
+        let mut data_filepath = match home::home_dir() {
+            Some(path_buffer) => path_buffer,
+            None => panic!("error: unable to find home directory") 
+        };            
+        
+        data_filepath.push(".keynotes/kntest.dat");
+        data_filepath
+    }
+    
+    fn get_path_to_file_in_nonexistant_folder() -> PathBuf {
+        let mut data_filepath = match home::home_dir() {
+            Some(path_buffer) => path_buffer,
+            None => panic!("error: unable to find home directory") 
+        };            
+        
+        data_filepath.push(".keynotes/fakefolder/onemore/kntest.dat");
+
+        data_filepath
+    }
+
+    #[test]
+    fn open_keynote_file_success() {
+        // create test file
+        let path_to_test_file = get_path_to_test_file();        
+
+        let result = KeynoteFile::open_keynote_file(&path_to_test_file);
+
+        assert!(result.is_ok());
+
+        // delete test file
+        fs::remove_file(path_to_test_file).expect("error: unable to remove test file");
+    }
+
+    #[test]
+    #[should_panic]
+    fn open_keynote_file_nonexistant_location() {
+        // create test file
+        let path_to_test_file = get_path_to_file_in_nonexistant_folder();        
+
+        match KeynoteFile::open_keynote_file(&path_to_test_file) {
+            Ok(_) => {  // delete test file
+                fs::remove_file(path_to_test_file).expect("error: unable to remove test file");
+            },
+            Err(e) => {
+                panic!("{}", e.to_string());
+            }
+        };       
+    }
+
+    #[test]
+    fn get_section_success() {
+        // setup
+        let mut test_file = KeynoteFile {
+            filepath : PathBuf::new(), // not used for this test, can leave uninitialized
+            sections : HashMap::new() 
+        };
+        test_file.add_section_to_data_structure("test_section");
+
+        // execute
+        let section = test_file.get_section("test_section");
+        
+        // assert
+        assert!(section.is_some());
+        assert_eq!(section.unwrap().name, "test_section");        
+    }
+
+    #[test]
+    fn get_section_not_found() {
+        // setup
+        let mut test_file = KeynoteFile {
+            filepath : PathBuf::new(), // not used for this test, can leave uninitialized
+            sections : HashMap::new() 
+        };
+
+        // execute
+        let result = test_file.get_section("nonexistant_section");
+        
+        //assert
+        assert!(result.is_none());
     }
 }
