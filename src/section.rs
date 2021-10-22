@@ -16,7 +16,7 @@ impl Section {
     ///
     /// # Examples    ///
     /// ```
-    /// use keynotes::Section; 
+    /// use keydata::Section; 
     /// let s = Section::new("test_section");
     /// assert_eq!(s.name, "test_section");
     /// assert_eq!(s.data.len(), 0);
@@ -36,7 +36,7 @@ impl Section {
     ///
     /// # Examples    ///
     /// ```
-    /// use keynotes::Section; 
+    /// use keydata::Section; 
     /// let s = Section::build_section_string("test_section");
     /// assert_eq!(s, "<test_section>\n"); 
     /// ```
@@ -57,7 +57,7 @@ impl Section {
     ///
     /// # Examples    ///
     /// ```
-    /// use keynotes::Section; 
+    /// use keydata::Section; 
     /// let line = "<test_section>\n";
     /// let sn = Section::get_section_name_from_string(line);
     /// assert!(sn.is_some());
@@ -83,7 +83,7 @@ impl Section {
     ///
     /// # Examples    ///
     /// ```
-    /// use keynotes::Section; 
+    /// use keydata::Section; 
     /// let mut s = Section::new("test_section");
     /// assert_eq!(s.data.len(), 0);
     /// 

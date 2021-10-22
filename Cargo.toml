@@ -7,7 +7,7 @@ author = "Andrew O'Hara"
 license = "MIT"
 
 [lib]
-name = "keynotes"
+name = "keydata"
 path = "src/lib.rs"
 
 [dependencies]

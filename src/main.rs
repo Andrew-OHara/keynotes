@@ -13,7 +13,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     };
     
     // create file struct
-    let mut file = keynotes::KeynoteFile::new("keynotes.dat")?;   
+    let mut file = keydata::KeynoteFile::new("keynotes.dat")?;   
     file.load_data()?; 
 
     // handle various run modes as delineated by option
@@ -71,7 +71,7 @@ fn main() -> Result<(), Box<dyn Error>> {
 
             if let (Some(section_to_add_to), Some(key), Some(value)) = (args.get(2), args.get(3), args.get(4)) {                
                 println!("adding <{}>  {}  to  {}", key, value, section_to_add_to);
-                if let Err(e) = file.add_key(section_to_add_to, key, value) {
+                if let Err(e) = file.add_entry(section_to_add_to, key, value) {
                     if  e.to_string() == "key: {} already exists. no key added." || 
                         e.to_string() == "cannot add to '{}'. that section does not exist" {
                         
@@ -94,7 +94,7 @@ fn main() -> Result<(), Box<dyn Error>> {
             }
             if let Some(key) = args.get(2) {
                 println!("removing key: {}", key);
-                if let Err(e) = file.remove_key(key) {
+                if let Err(e) = file.remove_entry(key) {
                     if e.to_string() == "key: '{}' does not exist. nothing removed" {
                         println!("{}", e.to_string());
                     }

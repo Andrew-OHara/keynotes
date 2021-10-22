@@ -1,16 +1,16 @@
-//! Keynotes is a lib for storing notes. Used in command line note keeping app.
-//!     Notes are stored as key-value pairs and organized into named sections
-//!     Notes are stored in a config file in a hidden folder in users home directory
+//! Keydata is a lib for storing data. 
+//!     Data is stored as key-value pairs and organized into named sections
+//!     Data is stored in files created by the lib, in a hidden folder in users home directory
 //! 
 //! # Example
 //! ```
 //!use std::{error::Error, fs};
 //!
 //!fn main() -> Result<(), Box<dyn Error>> {
-//!    let mut file = keynotes::KeynoteFile::new("kntest.dat")?;   
+//!    let mut file = keydata::KeynoteFile::new("kntest.dat")?;   
 //!    file.load_data()?;
 //!    file.add_section("sectionname")?;
-//!    file.add_key("sectionname", "somekey", "somevalue")?;
+//!    file.add_entry("sectionname", "somekey", "somevalue")?;
 //!     
 //!    for (_, section) in file.get_sections() {   
 //!        if section.data.len() != 0 {
@@ -22,7 +22,7 @@
 //!        }
 //!    }    
 //
-//!    fs::remove_file(file.filepath); 
+//!    fs::remove_file(file.filepath);  // remove the test file
 //!     
 //!    Ok(()) 
 //!}
@@ -52,7 +52,7 @@ impl KeynoteFile {
     ///
     /// # Examples    ///
     /// ```
-    /// use keynotes::*;
+    /// use keydata::*;
     /// let kn_file = KeynoteFile::new("kntest.dat").unwrap();
     /// 
     /// assert!(kn_file.filepath.ends_with("kntest.dat"));
@@ -80,10 +80,11 @@ impl KeynoteFile {
     /// # Examples
     /// ```
     /// use std::fs;
-    /// use keynotes::*;
+    /// use keydata::*;
     /// 
-    /// let file = KeynoteFile::new("kntest.dat").unwrap().load_data(); 
-    /// 
+    /// let mut file = KeynoteFile::new("kntest.dat").unwrap();
+    /// file.load_data(); 
+    /// fs::remove_file(file.filepath);  // remove the test file
     /// ```
     pub fn load_data(&mut self) -> Result<(), Box<dyn Error>> {
         let file = KeynoteFile::open_keynote_file(&self.filepath)?;
@@ -112,7 +113,27 @@ impl KeynoteFile {
         Ok(())
     }   
 
-    pub fn add_key<'a>(&mut self, section_to_add_to: &str, key: &str, value: &str) -> Result<(), Box<dyn Error>> {
+    /// Add a key-value entry into the file
+    ///
+    /// # Arguments
+    ///
+    /// * `section_to_add_to` - section to add entry to as string slice 
+    /// * `key` - key for the entry as string slice 
+    /// * `value` - value of the entry as string slice 
+    ///
+    /// # Examples    ///
+    /// ```
+    /// use std::fs;
+    /// use keydata::*;
+    /// 
+    /// let mut kn_file = KeynoteFile::new("kntest.dat").unwrap();     
+    /// kn_file.add_section("leaders").unwrap();
+    /// 
+    /// kn_file.add_entry("leaders", "atreides", "leto");
+    ///  
+    /// fs::remove_file(kn_file.filepath); // remove the test file
+    /// ```
+    pub fn add_entry<'a>(&mut self, section_to_add_to: &str, key: &str, value: &str) -> Result<(), Box<dyn Error>> {
         if self.contains_key(key) {
             return Err(format!("key: {} already exists. no key added.", key).into());            
         }      
@@ -156,7 +177,26 @@ impl KeynoteFile {
         Ok(())
     }
 
-    pub fn remove_key(mut self, key: &str) -> Result<(), Box<dyn Error>>{
+    /// Remove a key-value entry from the file
+    ///
+    /// # Arguments
+    /// 
+    /// * `key` - key for the entry to remove as string slice  
+    ///
+    /// # Examples    ///
+    /// ```
+    /// use std::fs;
+    /// use keydata::*;
+    /// 
+    /// let mut kn_file = KeynoteFile::new("kntest.dat").unwrap();    
+    /// kn_file.add_section("leaders").unwrap();   
+    /// kn_file.add_entry("leaders", "atreides", "leto");
+    /// 
+    /// kn_file.remove_entry("atreides");
+    /// 
+    /// fs::remove_file(kn_file.filepath);  // remove the test file  
+    /// ```
+    pub fn remove_entry(&mut self, key: &str) -> Result<(), Box<dyn Error>>{
         if !self.contains_key(key) {
             return Err(format!("key: '{}' does not exist. nothing removed.", key).into());            
         }     
@@ -204,6 +244,24 @@ impl KeynoteFile {
         Ok(())
     }
 
+    /// Remove a section from the file
+    ///
+    /// # Arguments
+    /// 
+    /// * `section_to_remove` - section to remove as string slice  
+    ///
+    /// # Examples    ///
+    /// ```
+    /// use std::fs;
+    /// use keydata::*;
+    /// 
+    /// let mut kn_file = KeynoteFile::new("kntest.dat").unwrap();    
+    /// kn_file.add_section("leaders").unwrap();   
+    /// 
+    /// kn_file.remove_section("leaders");
+    /// 
+    /// fs::remove_file(kn_file.filepath);  // remove the test file  
+    /// ```
     pub fn remove_section(&mut self, section_to_remove: &str) -> Result<(), Box<dyn Error>> {    
         let file = KeynoteFile::open_keynote_file(&self.filepath)?;
         let reader = io::BufReader::new(file);
@@ -241,10 +299,41 @@ impl KeynoteFile {
         Ok(())
     }
     
+    /// Returns a reference to this files sections hashmap    
+    ///
+    /// # Examples    ///
+    /// ```
+    /// use std::fs;
+    /// use keydata::*;
+    /// 
+    /// let mut kn_file = KeynoteFile::new("kntest.dat").unwrap();    
+    /// kn_file.add_section("leaders").unwrap();   
+    /// 
+    /// let sections = kn_file.get_sections();
+    /// 
+    /// fs::remove_file(kn_file.filepath);  // remove the test file  
+    /// ```
     pub fn get_sections(&self) -> &HashMap<String, Section> {
         return &self.sections;
     }
 
+    /// Adds a new section to the file   
+    /// # Arguments
+    /// 
+    /// * `section_name` - name of the section to add
+    /// 
+    /// # Examples    
+    /// ```
+    /// use std::fs;
+    /// use keydata::*;
+    /// 
+    /// let mut kn_file = KeynoteFile::new("kntest.dat").unwrap(); 
+    ///    
+    /// kn_file.add_section("leaders").unwrap();   
+    /// kn_file.add_section("villains").unwrap();  
+    ///     
+    /// fs::remove_file(kn_file.filepath);  // remove the test file 
+    /// ```
     pub fn add_section(&mut self, section_name : &str) -> Result<(), Box<dyn Error>> {       
         if !is_alphabetic(section_name) {
             return Err(format!("'{}' is not a valid section name", section_name).into());            
@@ -265,6 +354,27 @@ impl KeynoteFile {
         Ok(())
     }  
 
+    /// Gets the value of an entry in the file from a key   
+    /// # Arguments
+    /// 
+    /// * `key` - key to search the file for
+    /// 
+    /// # Examples    
+    /// ```
+    /// use std::fs;
+    /// use keydata::*;
+    /// 
+    /// let mut kn_file = KeynoteFile::new("kntest.dat").unwrap(); 
+    ///    
+    /// kn_file.add_section("leaders").unwrap();   
+    /// kn_file.add_entry("leaders", "atreides", "leto");
+    /// 
+    /// let value = kn_file.get_value_from_key("atreides");  
+    /// 
+    /// println!("{}", value.unwrap());     // "leto"
+    /// 
+    /// fs::remove_file(kn_file.filepath);  // remove the test file     
+    /// ```
     pub fn get_value_from_key(&mut self, key: &str) -> Option<&str>{           
         for (_, section) in &self.sections {
             if let Some(value) = section.data.get(key) {
@@ -274,6 +384,26 @@ impl KeynoteFile {
         None
     }
     
+    /// Checks if a key is present in the file   
+    /// # Arguments
+    /// 
+    /// * `key` - key to search the file for
+    /// 
+    /// # Examples    
+    /// ```
+    /// use std::fs;
+    /// use keydata::*;
+    /// 
+    /// let mut kn_file = KeynoteFile::new("kntest.dat").unwrap(); 
+    ///    
+    /// kn_file.add_section("leaders").unwrap();   
+    /// kn_file.add_entry("leaders", "atreides", "leto");
+    /// 
+    /// println!("{}", kn_file.contains_key("atreides"));
+    /// 
+    /// 
+    /// fs::remove_file(kn_file.filepath);  // remove the test file     
+    /// ```
     pub fn contains_key(&mut self, key: &str) -> bool {           
         for (_, section) in &self.sections {
             if section.data.contains_key(key) {
