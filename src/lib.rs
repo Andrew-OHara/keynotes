@@ -55,7 +55,7 @@ impl KeynoteFile {
     /// use keynotes::*;
     /// let kn_file = KeynoteFile::new("kntest.dat").unwrap();
     /// 
-    /// assert!(kn_file.filepath.contains("./keynotes/kntest.dat"));
+    /// assert!(kn_file.filepath.ends_with("kntest.dat"));
     ///  
     /// ```
     pub fn new<'a>(filename: &str) -> Result<KeynoteFile, &'a str> {
@@ -75,55 +75,16 @@ impl KeynoteFile {
         })
     }
 
-    fn open_keynote_file(filepath : &PathBuf) -> Result<File, Box<dyn Error>>{
-        // obtain the path to the path_buf parent folder
-        let mut folder = filepath.clone();
-        folder.pop();        
-  
-        // if folder doesn't exist, create it
-        if !folder.exists() {
-            fs::create_dir(folder)?;
-        }   
-
-        // open file as append and read, and return
-        let file = OpenOptions::new().append(true).read(true).create(true).open(filepath.as_path())?;     
-     
-        Ok(file)       
-    }
-
-    fn build_entry_string(key: &str, value: &str) -> String {
-        let mut entry: String = String::from("\t<");
-        entry.push_str(key);
-        entry.push('>');
-        entry.push_str(value);
-        entry.push_str("<~>");
-        entry.push('\n');
-
-        entry
-    } 
-
-    fn get_entry_from_string(line: &str) -> Option<(&str, &str)>{
-        if line.starts_with("\t") {
-            if let Some(i) = line.find(">") {
-                let k = &line[2..i];
-                let v = &line[i+1..line.len()-3];
-                return Some((k, v));
-            }
-        }
-        None
-    }       
-
-    fn get_section(&mut self, section_name : &str) -> Option<&mut Section> {
-        match self.sections.get_mut(section_name) {
-            Some(section) => Some(section),
-            None => None
-        }
-    }
-    
-    fn add_section_to_data_structure(&mut self, section_name: &str) {
-        self.sections.insert(section_name.to_string(), Section::new(section_name));
-    }
-
+    /// Loads data from file into KeynoteFile structure     
+    ///
+    /// # Examples
+    /// ```
+    /// use std::fs;
+    /// use keynotes::*;
+    /// 
+    /// let file = KeynoteFile::new("kntest.dat").unwrap().load_data(); 
+    /// 
+    /// ```
     pub fn load_data(&mut self) -> Result<(), Box<dyn Error>> {
         let file = KeynoteFile::open_keynote_file(&self.filepath)?;
 
@@ -321,9 +282,61 @@ impl KeynoteFile {
         }
         return false
     }
-}
-#[cfg(test)]
 
+    // ---------------------------------------------------- private functions
+    fn open_keynote_file(filepath : &PathBuf) -> Result<File, Box<dyn Error>>{
+        // obtain the path to the path_buf parent folder
+        let mut folder = filepath.clone();
+        folder.pop();        
+  
+        // if folder doesn't exist, create it
+        if !folder.exists() {
+            fs::create_dir(folder)?;
+        }   
+
+        // open file as append and read, and return
+        let file = OpenOptions::new().append(true).read(true).create(true).open(filepath.as_path())?;     
+     
+        Ok(file)       
+    }
+
+    fn build_entry_string(key: &str, value: &str) -> String {
+        let mut entry: String = String::from("\t<");
+        entry.push_str(key);
+        entry.push('>');
+        entry.push_str(value);
+        entry.push_str("<~>");
+        entry.push('\n');
+
+        entry
+    } 
+
+    fn get_entry_from_string(line: &str) -> Option<(&str, &str)>{
+        if line.starts_with("\t") {
+            if let Some(i) = line.find(">") {
+                let k = &line[2..i];
+                let v = &line[i+1..line.len()-3];
+                return Some((k, v));
+            }
+        }
+        None
+    }       
+
+    fn get_section(&mut self, section_name : &str) -> Option<&mut Section> {
+        match self.sections.get_mut(section_name) {
+            Some(section) => Some(section),
+            None => None
+        }
+    }
+    
+    fn add_section_to_data_structure(&mut self, section_name: &str) {
+        self.sections.insert(section_name.to_string(), Section::new(section_name));
+    }
+    
+}
+
+// ---------------------------------------------------- tests
+#[cfg(test)]
 mod tests {
     use super::*;
 
