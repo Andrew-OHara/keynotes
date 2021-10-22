@@ -1,15 +1,46 @@
+//! Keynotes is a lib for storing notes. Used in command line note keeping app.
+//!     Notes are stored as key-value pairs and organized into named sections
+//!     Notes are stored in a config file in a hidden folder in users home directory
+//! 
+//! # Example
+//! ```
+//!use std::error::Error;
+//!
+//!fn main() -> Result<(), Box<dyn Error>> {
+//!    let mut file = keynotes::KeynoteFile::new()?;   
+//!    file.load_data()?;
+//!    file.add_section("sectionname")?;
+//!    file.add_key("sectionname", "somekey", "somevalue")?;
+//!     
+//!    for (_, section) in file.get_sections() {   
+//!        if section.data.len() != 0 {
+//!           println!("{}", section.name)
+//!        }    
+//!      
+//!        for (k, _) in section.data.iter() {
+//!            println!("\t{}", k);
+//!        }
+//!    }   
+//! 
+//!    file.remove_section("sectionname")?; 
+//!     
+//!    Ok(()) 
+//!}
+//! ```
+
 use std::{fs, fs::{OpenOptions, File}, io, io::{Write, prelude::*}, collections::HashMap, path::PathBuf, error::Error};
 
 mod section;
 
 use aoutils::*;
-use section::*;
+pub use section::*;
 
 pub struct KeynoteFile {
     pub filepath : PathBuf,
     sections : HashMap<String, Section> 
 }
 
+// TODO: CURRENT - change new to receive file name, makes it easier for testing
 impl KeynoteFile {
     pub fn new<'a>() -> Result<KeynoteFile, &'a str> {
         // build path to keynotes.dat file        
@@ -104,7 +135,7 @@ impl KeynoteFile {
         Ok(())
     }   
 
-    pub fn add_key<'a>(mut self, section_to_add_to: &str, key: &str, value: &str) -> Result<(), Box<dyn Error>> {
+    pub fn add_key<'a>(&mut self, section_to_add_to: &str, key: &str, value: &str) -> Result<(), Box<dyn Error>> {
         if self.contains_key(key) {
             return Err(format!("key: {} already exists. no key added.", key).into());            
         }      
@@ -275,8 +306,8 @@ impl KeynoteFile {
         return false
     }
 }
-
 #[cfg(test)]
+
 mod tests {
     use super::*;
 
@@ -337,7 +368,7 @@ mod tests {
             filepath : PathBuf::new(), // not used for this test, can leave uninitialized
             sections : HashMap::new() 
         };
-        test_file.add_section_to_data_structure("test_section");
+        test_file.sections.insert("test_section".to_string(), Section::new("test_section"));
 
         // execute
         let section = test_file.get_section("test_section");
@@ -360,5 +391,5 @@ mod tests {
         
         //assert
         assert!(result.is_none());
-    }
+    }    
 }

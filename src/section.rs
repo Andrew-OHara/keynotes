@@ -1,10 +1,26 @@
 use std::collections::HashMap;
+/// A Section to hold keynote file entries (key-value pairs)
 pub struct Section {
+    /// name of the Section
     pub name : String,
+    /// hashmap to hold key value pairs that make up entries
     pub data : HashMap<String, String>
 }
 
 impl Section {
+    /// Returns a Section with the name given
+    ///
+    /// # Arguments
+    ///
+    /// * `name` - section name as string slice
+    ///
+    /// # Examples    ///
+    /// ```
+    /// use keynotes::Section; 
+    /// let s = Section::new("test_section");
+    /// assert_eq!(s.name, "test_section");
+    /// assert_eq!(s.data.len(), 0);
+    /// ```
     pub fn new(name : &str) -> Section {
         Section {
             name: name.to_string(),
@@ -12,6 +28,18 @@ impl Section {
         }
     }
 
+    /// Formats a string into the form it appears as in the data file
+    ///
+    /// # Arguments
+    ///
+    /// * `section_name` - name of section to format as string slice
+    ///
+    /// # Examples    ///
+    /// ```
+    /// use keynotes::Section; 
+    /// let s = Section::build_section_string("test_section");
+    /// assert_eq!(s, "<test_section>\n"); 
+    /// ```
     pub fn build_section_string(section_name: &str) -> String {
         let mut header_string = String::new();
         header_string.push('<');
@@ -21,7 +49,20 @@ impl Section {
         header_string
     } 
     
-    // this both gets the name from the string and validates that the string is correct section format
+    /// Returns name of a section from formatted section string. None if line is not valid section string;
+    ///
+    /// # Arguments
+    ///
+    /// * `line` - string slice containing section string
+    ///
+    /// # Examples    ///
+    /// ```
+    /// use keynotes::Section; 
+    /// let line = "<test_section>\n";
+    /// let sn = Section::get_section_name_from_string(line);
+    /// assert!(sn.is_some());
+    /// assert_eq!(sn.unwrap(), "test_section"); 
+    /// ```
     pub fn get_section_name_from_string(line : &str) -> Option<&str> {
         if !line.starts_with("<") || !line.contains(">") || line.contains("\t") {  // not a valid section name
             return None
@@ -33,6 +74,23 @@ impl Section {
         Some(&line[1..line.len()-chars_to_subtract])
     } 
 
+    /// Adds a key-value pair entry to the Sections data
+    ///
+    /// # Arguments
+    ///
+    /// * `key` - entry key as string slice
+    /// * `value` - entry value as string slice
+    ///
+    /// # Examples    ///
+    /// ```
+    /// use keynotes::Section; 
+    /// let mut s = Section::new("test_section");
+    /// assert_eq!(s.data.len(), 0);
+    /// 
+    /// s.add_entry("theKey", "theValue");
+    /// assert_eq!(s.data.len(), 1);
+    /// assert_eq!(s.data.get("theKey").unwrap(), "theValue"); 
+    /// ```
     pub fn add_entry(&mut self, key: &str, value: &str) {
         self.data.insert(key.to_string(), value.to_string());
     }
