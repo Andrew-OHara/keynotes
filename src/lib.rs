@@ -4,10 +4,10 @@
 //! 
 //! # Example
 //! ```
-//!use std::error::Error;
+//!use std::{error::Error, fs};
 //!
 //!fn main() -> Result<(), Box<dyn Error>> {
-//!    let mut file = keynotes::KeynoteFile::new()?;   
+//!    let mut file = keynotes::KeynoteFile::new("kntest.dat")?;   
 //!    file.load_data()?;
 //!    file.add_section("sectionname")?;
 //!    file.add_key("sectionname", "somekey", "somevalue")?;
@@ -20,9 +20,9 @@
 //!        for (k, _) in section.data.iter() {
 //!            println!("\t{}", k);
 //!        }
-//!    }   
-//! 
-//!    file.remove_section("sectionname")?; 
+//!    }    
+//
+//!    fs::remove_file(file.filepath); 
 //!     
 //!    Ok(()) 
 //!}
@@ -35,14 +35,30 @@ mod section;
 use aoutils::*;
 pub use section::*;
 
+/// A data structure to represent the keynotes data file
 pub struct KeynoteFile {
+    /// path to the file as a PathBuf
     pub filepath : PathBuf,
+    /// hashmap to store Section instances
     sections : HashMap<String, Section> 
 }
 
-// TODO: CURRENT - change new to receive file name, makes it easier for testing
 impl KeynoteFile {
-    pub fn new<'a>() -> Result<KeynoteFile, &'a str> {
+    /// Creates a new KeynoteFile
+    ///
+    /// # Arguments
+    ///
+    /// * `filename` - name of file to create in keynotes folder  
+    ///
+    /// # Examples    ///
+    /// ```
+    /// use keynotes::*;
+    /// let kn_file = KeynoteFile::new("kntest.dat").unwrap();
+    /// 
+    /// assert!(kn_file.filepath.contains("./keynotes/kntest.dat"));
+    ///  
+    /// ```
+    pub fn new<'a>(filename: &str) -> Result<KeynoteFile, &'a str> {
         // build path to keynotes.dat file        
         let mut data_filepath = match home::home_dir() {
             Some(path_buffer) => path_buffer,
@@ -51,7 +67,7 @@ impl KeynoteFile {
             }
         };        
         
-        data_filepath.push(".keynotes/keynotes.dat");
+        data_filepath.push(format!(".keynotes/{}", filename));
         
         Ok(KeynoteFile {
             sections: HashMap::new(),

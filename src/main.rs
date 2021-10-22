@@ -13,7 +13,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     };
     
     // create file struct
-    let mut file = keynotes::KeynoteFile::new()?;   
+    let mut file = keynotes::KeynoteFile::new("keynotes.dat")?;   
     file.load_data()?; 
 
     // handle various run modes as delineated by option
