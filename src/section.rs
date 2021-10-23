@@ -40,7 +40,7 @@ impl Section {
     /// let s = Section::build_section_string("test_section");
     /// assert_eq!(s, "<test_section>\n"); 
     /// ```
-    pub(in super) fn build_section_string(section_name: &str) -> String {
+    pub fn build_section_string(section_name: &str) -> String {
         let mut header_string = String::new();
         header_string.push('<');
         header_string.push_str(section_name);
@@ -63,7 +63,7 @@ impl Section {
     /// assert!(sn.is_some());
     /// assert_eq!(sn.unwrap(), "test_section"); 
     /// ```
-    pub(in super) fn get_section_name_from_string(line : &str) -> Option<&str> {
+    pub fn get_section_name_from_string(line : &str) -> Option<&str> {
         if !line.starts_with("<") || !line.contains(">") || line.contains("\t") {  // not a valid section name
             return None
         }
