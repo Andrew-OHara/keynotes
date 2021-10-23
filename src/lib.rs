@@ -413,6 +413,32 @@ impl KeynoteFile {
         return false
     }
 
+    /// Returns a Section from the file based on section name   
+    /// # Arguments
+    /// 
+    /// * `section_name` - name of section to return if it exists
+    /// 
+    /// # Examples    
+    /// ```
+    /// use std::fs;
+    /// use keydata::*;
+    /// 
+    /// let mut kn_file = KeynoteFile::new("kntest.dat").unwrap(); 
+    ///    
+    /// kn_file.add_section("leaders").unwrap();
+    /// 
+    /// println!("{}", kn_file.get_section("leaders").unwrap().name);
+    /// 
+    /// 
+    /// fs::remove_file(kn_file.filepath);  // remove the test file     
+    /// ```
+    pub fn get_section(&mut self, section_name : &str) -> Option<&mut Section> {
+        match self.sections.get_mut(section_name) {
+            Some(section) => Some(section),
+            None => None
+        }
+    }
+
     // ---------------------------------------------------- private functions
     fn open_keynote_file(filepath : &PathBuf) -> Result<File, Box<dyn Error>>{
         // obtain the path to the path_buf parent folder
@@ -450,14 +476,7 @@ impl KeynoteFile {
             }
         }
         None
-    }       
-
-    fn get_section(&mut self, section_name : &str) -> Option<&mut Section> {
-        match self.sections.get_mut(section_name) {
-            Some(section) => Some(section),
-            None => None
-        }
-    }
+    }    
     
     fn add_section_to_data_structure(&mut self, section_name: &str) {
         self.sections.insert(section_name.to_string(), Section::new(section_name));

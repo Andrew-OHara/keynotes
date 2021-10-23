@@ -3,7 +3,6 @@ name = "keynotes"
 version = "0.1.0"
 edition = "2018"
 description = "Keynotes is a command line note keeping app. Notes are stored as key-value pairs organized into named sections"
-author = "Andrew O'Hara"
 license = "MIT"
 
 [lib]
@@ -11,6 +10,5 @@ name = "keydata"
 path = "src/lib.rs"
 
 [dependencies]
-
 aoutils = "0.1.0"
 home = "0.5.3"
