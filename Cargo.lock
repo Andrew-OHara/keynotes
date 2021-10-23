@@ -4,9 +4,9 @@ version = 3
 
 [[package]]
 name = "aoutils"
-version = "0.1.0"
+version = "0.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b633390fde3d7cdd94191ed4180ed3e3982d315ba9fd347d76b8719e4fbd0de4"
+checksum = "4b9db0db43a415452d1ab2cef719f3d82904117ac2db18e05699982c96cf0013"
 
 [[package]]
 name = "home"

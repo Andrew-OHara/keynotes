@@ -10,5 +10,5 @@ name = "keydata"
 path = "src/lib.rs"
 
 [dependencies]
-aoutils = "0.1.0"
+aoutils = "0.1.1"
 home = "0.5.3"
