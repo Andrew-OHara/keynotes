@@ -35,7 +35,7 @@ fn main() -> Result<(), Box<dyn Error>> {
                 println!("added section '{}'", section_name);
             }      
             else {
-                println!("add section usage:    kn -as [sectionName]     sectionName is mandatory.  see kn -help for details");
+                println!("add section usage:    kn -as [section_name]     'section_name' is mandatory.  see kn -help for details");
             }
 
         },
@@ -47,7 +47,7 @@ fn main() -> Result<(), Box<dyn Error>> {
                 file.remove_section(section_to_remove)?;                
             }
             else {
-                println!("remove section usage:    kn -rs [sectionName]     sectionName is mandatory.  see kn -help for details");
+                println!("remove section usage:    kn -rs [section_name]     'section_name' is mandatory.  see kn -help for details");
             };
             
         },
@@ -62,17 +62,17 @@ fn main() -> Result<(), Box<dyn Error>> {
             }  
 
         },
-        "-ak" => {
+        "-ae" => {
 
             if args.len() != 5 {
-                println!("add key usage:    kn -ak [sectionToAddTo] [key] [value]       all options mandatory.  see kn -help for details"); 
+                println!("add entry usage:    kn -ae [section_to_add_to] [key] [value]       all options mandatory.  see kn -help for details"); 
                 return Ok(())                  
             }        
 
             if let (Some(section_to_add_to), Some(key), Some(value)) = (args.get(2), args.get(3), args.get(4)) {                
                 println!("adding <{}>  {}  to  {}", key, value, section_to_add_to);
                 if let Err(e) = file.add_entry(section_to_add_to, key, value) {
-                    if  e.to_string() == "key: {} already exists. no key added." || 
+                    if  e.to_string() == "key: {} already exists. no entry added." || 
                         e.to_string() == "cannot add to '{}'. that section does not exist" {
                         
                         println!("{}", e.to_string());
@@ -83,17 +83,17 @@ fn main() -> Result<(), Box<dyn Error>> {
                 }                               
             }
             else {
-                return Err("parameters not valid. no key added.".into());
+                return Err("parameters not valid. no entry added.".into());
             };
             
         },
-        "-rk" => {
+        "-re" => {
 
             if args.len() != 3 {                
-                return Err("list data usage:    kn -rk [key]      key is mandatory.  see kn -help for details".into());                
+                return Err("remove entry usage:    kn -re [key]      key is mandatory.  see kn -help for details".into());                
             }
             if let Some(key) = args.get(2) {
-                println!("removing key: {}", key);
+                println!("removing entry with key: {}", key);
                 if let Err(e) = file.remove_entry(key) {
                     if e.to_string() == "key: '{}' does not exist. nothing removed" {
                         println!("{}", e.to_string());
@@ -118,10 +118,10 @@ fn main() -> Result<(), Box<dyn Error>> {
             }
 
         },
-        "-ld" => {
+        "-lv" => {
 
             if args.len() != 3 {                
-                return Err("list data usage:    kn -ld [key]      key is mandatory.  see kn -help for details".into());                
+                return Err("list value usage:    kn -lv [key]      key is mandatory.  see kn -help for details".into());                
             }
             if let Some(key) = args.get(2) {
                 if let Some(value) = file.get_value_from_key(key) {
@@ -136,9 +136,27 @@ fn main() -> Result<(), Box<dyn Error>> {
 
         // TODO: put the help string into a file that gets loaded
         _ => {
-            print!(" keynotes v0.1.0:\n\n\tlegend:\t\t[] - mandatory    () - optional\n\n\tusage:\t kn [-action] [action params]\
-            (additional params)\n\n\tactions:\n\n\t\t -as [sectionName]   Add Section: adds a section to the file with sectionName \
-            action param as the name. Disallows duplicate section names. \n\t\t\t\t\t\t  Section names must be alphabetical\n");
+                        
+            println!("\n {}", "keynotes v0.1.1:");
+            println!("\n {:>10}\t{}", "legend:",  "[] - mandatory  () - optional");
+            println!("\n {:>10}\t{}", "usage:", "kn [-action] [action params] (optional params)");
+            println!("\n\n {:>12}  {:<20}{:>30}\t{}", "actions:", "-as [section_name]", "add section:", 
+                                                        "adds a section to the file labelled 'section_name'.");
+            println!("{:>140}", "section names must be alphabetical and cannot be duplicated.");
+            println!("\n\n {:>12}  {:<20}{:>30}\t{}", " ", "-rs [section_name]", "remove section:", 
+                                                        "deletes a section from the file if 'section_name' exists.");
+            println!("\n\n {:>12}  {:<30}{:>20}\t{}", " ", "-ls", "list sections:", 
+                                                        "lists all the sections in the file.");                                            
+            println!("\n\n {:>12}  {:<30}{:>18}\t{}", " ", "-ae [section_name] [key] [value]", "add entry:", 
+                                                        "adds an entry to the file in 'section_name'. duplicate keys not allowed.");
+            println!("\n\n {:>12}  {:<30}{:>20}\t{}", " ", "-re [key]", "remove entry:", 
+                                                        "removes an entry from the file if 'key' exists.");
+            println!("\n\n {:>12}  {:<30}{:>20}\t{}", " ", "-lk", "list keys:", 
+                                                        "lists all the keys in the file.");
+            println!("\n\n {:>12}  {:<30}{:>20}\t{}", " ", "-lv", "list value:", 
+                                                        "lists a value from the file if 'key' exists.\n");                                            
+        
+            
         }        
     };
 
