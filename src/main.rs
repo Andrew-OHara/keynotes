@@ -137,7 +137,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         // TODO: put the help string into a file that gets loaded
         _ => {
                         
-            println!("\n {}", "keynotes v0.1.1:");
+            println!("\n {}", "keynotes v0.1.0:");
             println!("\n {:>10}\t{}", "legend:",  "[] - mandatory  () - optional");
             println!("\n {:>10}\t{}", "usage:", "kn [-action] [action params] (optional params)");
             println!("\n\n {:>12}  {:<20}{:>30}\t{}", "actions:", "-as [section_name]", "add section:", 
