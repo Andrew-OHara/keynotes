@@ -2,7 +2,10 @@
 name = "keynotes"
 version = "0.1.0"
 edition = "2018"
-description = "Keynotes is a command line note keeping app. Notes are stored as key-value pairs organized into named sections"
+description = "Keynotes is a command line note keeping app using the keydata library. Notes are stored as key-value pairs organized into named sections."
+repository = "https://github.com/Andrew-OHara/keynotes"
+homepage = "https://github.com/Andrew-OHara/keynotes"
+readme = "readme.md"
 license = "MIT"
 
 [lib]

@@ -33,6 +33,8 @@ fn main() -> Result<(), Box<dyn Error>> {
     Ok(()) 
 }
 ```
+For a more complete example featuring a full command line app go to: 
+        https://github.com/Andrew-OHara/keynotes/blob/master/src/main.rs
 
 ## License
 [MIT](https://choosealicense.com/licenses/mit/)
